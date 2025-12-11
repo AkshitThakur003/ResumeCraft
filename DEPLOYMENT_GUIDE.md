@@ -382,7 +382,6 @@ If you see warnings about Redis, the app will still work with in-memory fallback
 - [Vercel Documentation](https://vercel.com/docs)
 - [MongoDB Atlas Setup](https://docs.atlas.mongodb.com/)
 - [Cloudinary Setup](docs/CLOUDINARY_SMTP_SETUP.md)
-- [Admin Setup](docs/ADMIN_SETUP.md)
 
 ---
 

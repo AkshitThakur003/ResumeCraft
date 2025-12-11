@@ -164,7 +164,6 @@ Frontend (Vercel) → Backend (Render) → MongoDB Atlas
 
 - [SETUP_GUIDE.md](./SETUP_GUIDE.md) - Complete setup instructions
 - [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) - Deployment guide
-- [docs/ADMIN_SETUP.md](./docs/ADMIN_SETUP.md) - Admin setup
 - [DOCKER_SETUP_INSTRUCTIONS.md](./DOCKER_SETUP_INSTRUCTIONS.md) - Docker guide
 - [SETUP_REDIS.md](./SETUP_REDIS.md) - Redis configuration
 
