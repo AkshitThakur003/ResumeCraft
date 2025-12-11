@@ -1,0 +1,461 @@
+/* Optimized font loading with font-display: swap */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+/* Print styles for analysis reports */
+@import './styles/print.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 222.2 84% 4.9%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    /* Deep Slate Background (Slate 950) */
+    --background: 222.2 47.4% 11.2%;
+    --foreground: 210 40% 98%;
+    
+    /* Cards (Slate 900) - Slightly lighter than bg for depth */
+    --card: 217.2 32.6% 17.5%;
+    --card-foreground: 210 40% 98%;
+    
+    --popover: 217.2 32.6% 17.5%;
+    --popover-foreground: 210 40% 98%;
+    
+    /* Primary - Bright Blue/Indigo */
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    
+    /* Secondary - Muted Slate */
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Smooth theme transitions */
+  html.theme-transition,
+  html.theme-transition *,
+  html.theme-transition *::before,
+  html.theme-transition *::after {
+    transition: background-color 0.3s ease-in-out,
+                border-color 0.3s ease-in-out,
+                color 0.3s ease-in-out,
+                fill 0.3s ease-in-out,
+                stroke 0.3s ease-in-out !important;
+    transition-delay: 0s !important;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full transition-colors;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/40;
+  }
+}
+
+@layer components {
+  /* Container styles */
+  .container-custom {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Glassmorphism utility - Replaces .glass and .glassmorphism */
+  .glass-panel {
+    @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/20 dark:border-white/10;
+  }
+
+  .glass-panel-hover {
+    @apply transition-all duration-300 hover:bg-white/80 dark:hover:bg-slate-900/80 hover:shadow-lg hover:shadow-primary/5;
+  }
+  
+  /* Focus styles */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  /* Mobile-first responsive utilities */
+  .touch-action-manipulation {
+    touch-action: manipulation;
+  }
+
+  /* Responsive text truncation */
+  .truncate-mobile {
+    @apply truncate max-w-[150px] sm:max-w-none;
+  }
+
+  /* Better tap targets for mobile */
+  .tap-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  /* Hide scrollbar on mobile for horizontal scroll areas */
+  .scroll-hide-mobile {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scroll-hide-mobile::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Safe area padding for notched devices */
+  .safe-area-inset {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Mobile horizontal scroll container */
+  .mobile-scroll-x {
+    @apply flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-hide-mobile;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mobile-scroll-x > * {
+    @apply snap-start flex-shrink-0;
+  }
+
+  /* Responsive card grid */
+  .card-grid {
+    @apply grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4;
+  }
+
+  /* Mobile-friendly modal */
+  .modal-mobile {
+    @apply fixed inset-0 z-50 flex items-end sm:items-center justify-center;
+  }
+  .modal-mobile-content {
+    @apply w-full max-h-[90vh] sm:max-h-[85vh] sm:max-w-lg rounded-t-2xl sm:rounded-2xl overflow-hidden;
+  }
+
+  /* Bottom sheet for mobile */
+  .bottom-sheet {
+    @apply fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-slate-900 rounded-t-2xl shadow-2xl safe-area-inset;
+    max-height: 90vh;
+  }
+
+  /* Mobile-friendly buttons */
+  .btn-mobile {
+    @apply tap-target touch-action-manipulation active:scale-95 transition-transform;
+  }
+
+  /* Responsive text sizes */
+  .text-responsive-sm {
+    @apply text-xs sm:text-sm;
+  }
+  .text-responsive-base {
+    @apply text-sm sm:text-base;
+  }
+  .text-responsive-lg {
+    @apply text-base sm:text-lg md:text-xl;
+  }
+  .text-responsive-xl {
+    @apply text-lg sm:text-xl md:text-2xl;
+  }
+  .text-responsive-2xl {
+    @apply text-xl sm:text-2xl md:text-3xl;
+  }
+  .text-responsive-3xl {
+    @apply text-2xl sm:text-3xl md:text-4xl;
+  }
+
+  /* Mobile-friendly spacing */
+  .section-padding {
+    @apply px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-12;
+  }
+
+  /* Prevent text selection on interactive elements (mobile) */
+  .no-select {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* Mobile drawer handle */
+  .drawer-handle {
+    @apply w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mb-4;
+  }
+
+  /* Responsive table utilities */
+  .table-responsive {
+    @apply w-full;
+  }
+
+  /* Mobile table card view */
+  @media (max-width: 768px) {
+    .table-responsive {
+      @apply block;
+    }
+    .table-responsive thead {
+      @apply hidden;
+    }
+    .table-responsive tbody {
+      @apply block;
+    }
+    .table-responsive tr {
+      @apply block mb-4 p-4 bg-card rounded-lg border border-border shadow-sm;
+    }
+    .table-responsive td {
+      @apply block text-right px-0 py-2 border-b border-border/50 last:border-b-0;
+    }
+    .table-responsive td[data-label]:not([data-label=""])::before {
+      content: attr(data-label);
+      @apply float-left font-semibold text-foreground mr-2;
+    }
+    .table-responsive td[data-label=""] {
+      @apply hidden;
+    }
+  }
+
+  /* Mobile-friendly table wrapper */
+  .table-wrapper-mobile {
+    @apply -mx-4 sm:mx-0;
+  }
+  .table-wrapper-mobile .overflow-x-auto {
+    @apply px-4 sm:px-0;
+  }
+  .table-wrapper-mobile .overflow-x-auto::-webkit-scrollbar {
+    @apply h-2;
+  }
+  .table-wrapper-mobile .overflow-x-auto::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 dark:bg-slate-600 rounded-full;
+  }
+
+  /* Enhanced mobile text sizes */
+  .text-mobile-sm {
+    @apply text-xs sm:text-sm;
+  }
+  .text-mobile-base {
+    @apply text-sm sm:text-base;
+  }
+  .text-mobile-lg {
+    @apply text-base sm:text-lg;
+  }
+
+  /* Mobile-specific spacing */
+  .mobile-padding {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+  .mobile-padding-y {
+    @apply py-4 sm:py-6 lg:py-8;
+  }
+
+  /* Enhanced responsive grid utilities */
+  .grid-responsive {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
+  }
+  .grid-responsive-2 {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+  }
+  .grid-responsive-3 {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
+  }
+  .grid-responsive-4 {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4;
+  }
+
+  /* Responsive flex utilities */
+  .flex-responsive {
+    @apply flex flex-col sm:flex-row gap-4;
+  }
+  .flex-responsive-wrap {
+    @apply flex flex-wrap gap-2 sm:gap-4;
+  }
+
+  /* Responsive visibility */
+  .hide-mobile {
+    @apply hidden sm:block;
+  }
+  .hide-desktop {
+    @apply block sm:hidden;
+  }
+  .show-mobile {
+    @apply block sm:hidden;
+  }
+  .show-desktop {
+    @apply hidden sm:block;
+  }
+
+  /* Responsive container widths */
+  .container-sm {
+    @apply max-w-2xl mx-auto px-4 sm:px-6;
+  }
+  .container-md {
+    @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  .container-lg {
+    @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  .container-xl {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Responsive gap utilities */
+  .gap-responsive {
+    @apply gap-2 sm:gap-4 lg:gap-6;
+  }
+  .gap-responsive-sm {
+    @apply gap-1 sm:gap-2 lg:gap-3;
+  }
+  .gap-responsive-lg {
+    @apply gap-4 sm:gap-6 lg:gap-8;
+  }
+
+  /* Responsive border radius */
+  .rounded-responsive {
+    @apply rounded-lg sm:rounded-xl lg:rounded-2xl;
+  }
+
+  /* Responsive shadow */
+  .shadow-responsive {
+    @apply shadow-sm sm:shadow-md lg:shadow-lg;
+  }
+
+  /* Typography Scale Utilities */
+  .h1 {
+    @apply text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-foreground;
+  }
+  .h2 {
+    @apply text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-foreground;
+  }
+  .h3 {
+    @apply text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight text-foreground;
+  }
+  .h4 {
+    @apply text-lg sm:text-xl md:text-2xl font-semibold tracking-tight text-foreground;
+  }
+  .h5 {
+    @apply text-base sm:text-lg md:text-xl font-semibold tracking-tight text-foreground;
+  }
+  .h6 {
+    @apply text-sm sm:text-base md:text-lg font-semibold tracking-tight text-foreground;
+  }
+
+  /* Typography Utilities */
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60;
+  }
+  .text-gradient-brand {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-brand-400;
+  }
+  .text-shadow-sm {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  .text-shadow-lg {
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Radix Dropdown Menu Styles */
+  [data-radix-dropdown-menu-content] {
+    animation: dropdownFadeIn 0.2s ease-out;
+  }
+
+  @keyframes dropdownFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-8px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+}
+
+/* Animations */
+@keyframes skeleton-loading {
+  0% { background-color: hsl(var(--muted)); }
+  100% { background-color: hsl(var(--muted-foreground) / 0.1); }
+}
+
+.animate-skeleton {
+  animation: skeleton-loading 1s linear infinite alternate;
+}
+
+@keyframes fadeInDropdown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

@@ -1,0 +1,286 @@
+# ============================================
+# ResumeCraft - Git Ignore File
+# ============================================
+
+# ============================================
+# Dependencies
+# ============================================
+node_modules/
+/.pnp
+.pnp.js
+.pnp.*
+jspm_packages/
+
+# ============================================
+# Build Output
+# ============================================
+/build
+/dist
+frontend/dist/
+frontend/dist-ssr/
+backend/dist/
+backend/build/
+*.tsbuildinfo
+
+# ============================================
+# Environment Variables (CRITICAL - Never commit!)
+# ============================================
+.env
+.env.*
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+.env.staging
+.env.*.local
+.env.*.backup
+*.env.backup
+backend/.env
+backend/.env.*
+frontend/.env.development
+frontend/.env.production
+frontend/.env.*
+!.env.example
+!backend/.env.example
+!frontend/.env.production.example
+
+# ============================================
+# Testing & Coverage
+# ============================================
+/coverage
+*.lcov
+.nyc_output/
+test-results/
+playwright-report/
+playwright/.cache/
+*.spec.js.snap
+.vitest/
+
+# ============================================
+# Logs
+# ============================================
+logs/
+*.log
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ============================================
+# IDE & Editor Files
+# ============================================
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json.example
+.idea/
+*.swp
+*.swo
+*~
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# ============================================
+# OS Generated Files
+# ============================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ============================================
+# Temporary Files
+# ============================================
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.orig
+*.pid
+*.seed
+*.pid.lock
+
+# ============================================
+# User Uploads & Temporary Storage
+# ============================================
+backend/uploads/
+backend/uploads/temp/
+backend/uploads/*.pdf
+backend/uploads/*.doc
+backend/uploads/*.docx
+backend/uploads/*.txt
+uploads/
+temp/
+
+# ============================================
+# Database Files
+# ============================================
+*.db
+*.sqlite
+*.sqlite3
+data/
+mongodb-data/
+*.mongo
+
+# ============================================
+# Redis Files
+# ============================================
+dump.rdb
+*.rdb
+redis-data/
+redis.conf.local
+
+# ============================================
+# Docker Volumes & Data
+# ============================================
+docker-data/
+.docker/
+*.pid
+
+# ============================================
+# Cache Directories
+# ============================================
+.cache/
+.parcel-cache/
+.npm/
+.eslintcache
+.stylelintcache
+.turbo/
+.next/
+.nuxt/
+.vuepress/dist/
+
+# ============================================
+# Secrets & Keys (Never commit!)
+# ============================================
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+secrets/
+.secrets/
+*.secret
+*.private
+
+# ============================================
+# Package Manager
+# ============================================
+# Uncomment if you don't want to commit lock files
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+.npm/
+.yarn/
+.pnp.*
+
+# ============================================
+# Runtime & Process Files
+# ============================================
+*.pid
+*.seed
+*.pid.lock
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ============================================
+# Optional: Build Artifacts
+# ============================================
+*.tgz
+*.tar.gz
+*.zip
+*.rar
+
+# ============================================
+# Optional: TypeScript
+# ============================================
+*.tsbuildinfo
+
+# ============================================
+# Optional: Storybook
+# ============================================
+storybook-static/
+
+# ============================================
+# Optional: Vercel
+# ============================================
+.vercel
+
+# ============================================
+# Optional: Netlify
+# ============================================
+.netlify/
+
+# ============================================
+# Optional: Sentry
+# ============================================
+.sentryclirc
+
+# ============================================
+# Optional: Local Development
+# ============================================
+.local/
+local/
+*.local
+
+# ============================================
+# Optional: Backup Files
+# ============================================
+*.bak
+*.backup
+*.old
+*.orig
+*~
+
+# ============================================
+# Optional: MacOS
+# ============================================
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# ============================================
+# Optional: Windows
+# ============================================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# ============================================
+# Optional: Linux
+# ============================================
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*

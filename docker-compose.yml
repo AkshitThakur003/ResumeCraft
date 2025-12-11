@@ -1,0 +1,53 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: resumecraft-redis
+    hostname: redis
+    # SECURITY: Only expose to localhost, not all interfaces
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis-data:/data
+    environment:
+      # Get password from .env file in project root or set REDIS_PASSWORD env var
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-changeme_please_set_strong_password}
+    # SECURITY: Set password via command - using sh to properly handle variable substitution
+    command: >
+      sh -c
+      "redis-server
+      --appendonly yes
+      --requirepass \"$${REDIS_PASSWORD}\"
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru"
+    restart: unless-stopped
+    # SECURITY: Resource limits to prevent DoS
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    # SECURITY: Health check with password
+    healthcheck:
+      test: ["CMD", "sh", "-c", "redis-cli --no-auth-warning -a \"$${REDIS_PASSWORD}\" ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    # SECURITY: Network isolation
+    networks:
+      - resumecraft-network
+    # SECURITY: Run with security options
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  redis-data:
+    driver: local
+
+# SECURITY: Isolated network
+networks:
+  resumecraft-network:
+    driver: bridge
