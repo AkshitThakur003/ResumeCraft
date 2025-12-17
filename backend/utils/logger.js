@@ -1,5 +1,6 @@
 const winston = require('winston');
 const path = require('path');
+const fs = require('fs');
 
 // Define log levels
 const levels = {
@@ -45,30 +46,55 @@ const transports = [
 
 // Add file transports in production
 if (process.env.NODE_ENV === 'production') {
-  const logsDir = path.join(__dirname, '../../logs');
+  // Use a writable location - try /tmp/logs first (common in cloud environments)
+  // Fallback to relative path if /tmp is not available
+  let logsDir;
+  try {
+    // Try to use /tmp/logs (writable in most cloud environments)
+    const tmpLogsDir = '/tmp/logs';
+    if (!fs.existsSync(tmpLogsDir)) {
+      fs.mkdirSync(tmpLogsDir, { recursive: true });
+    }
+    logsDir = tmpLogsDir;
+  } catch (tmpError) {
+    // Fallback to relative path within app directory
+    try {
+      logsDir = path.join(__dirname, '../../logs');
+      if (!fs.existsSync(logsDir)) {
+        fs.mkdirSync(logsDir, { recursive: true });
+      }
+    } catch (relativeError) {
+      // If both fail, skip file logging and only use console
+      console.warn('Warning: Could not create logs directory. File logging disabled.');
+      logsDir = null;
+    }
+  }
   
-  // Error log file
-  transports.push(
-    new winston.transports.File({
-      filename: path.join(logsDir, 'error.log'),
-      level: 'error',
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-      ),
-    })
-  );
+  // Only add file transports if we successfully created/accessed the logs directory
+  if (logsDir) {
+    // Error log file
+    transports.push(
+      new winston.transports.File({
+        filename: path.join(logsDir, 'error.log'),
+        level: 'error',
+        format: winston.format.combine(
+          winston.format.timestamp(),
+          winston.format.json()
+        ),
+      })
+    );
 
-  // Combined log file
-  transports.push(
-    new winston.transports.File({
-      filename: path.join(logsDir, 'combined.log'),
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-      ),
-    })
-  );
+    // Combined log file
+    transports.push(
+      new winston.transports.File({
+        filename: path.join(logsDir, 'combined.log'),
+        format: winston.format.combine(
+          winston.format.timestamp(),
+          winston.format.json()
+        ),
+      })
+    );
+  }
 }
 
 // Create logger instance
