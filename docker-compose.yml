@@ -43,6 +43,47 @@ services:
     security_opt:
       - no-new-privileges:true
 
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: resumecraft-backend
+    hostname: backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - backend/.env
+    environment:
+      # Redis connection - use service name 'redis' for Docker network
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-changeme_please_set_strong_password}
+      # Override NODE_ENV if needed (defaults to development)
+      - NODE_ENV=${NODE_ENV:-development}
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    # SECURITY: Network isolation
+    networks:
+      - resumecraft-network
+    # SECURITY: Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+    # Health check
+    healthcheck:
+      test: ["CMD", "node", "scripts/health-check.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
 volumes:
   redis-data:
     driver: local

@@ -2,39 +2,19 @@
   "name": "resumecraft",
   "version": "1.0.0",
   "description": "ResumeCraft - AI-Powered Resume Analysis Platform",
-  "main": "index.js",
+  "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev": "concurrently -n \"REDIS,BACKEND,FRONTEND\" -c \"yellow,blue,green\" \"npm run dev:redis\" \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:redis": "docker-compose up redis",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
-    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
-    "start:backend": "cd backend && npm start",
-    "start:frontend": "cd frontend && npm run build && npm run preview",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "test": "npm run test:backend && npm run test:frontend",
     "test:backend": "cd backend && npm test",
-    "test:frontend": "cd frontend && npm test",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:frontend": "cd frontend && npm test"
   },
-  "keywords": [
-    "resume",
-    "ai",
-    "analysis",
-    "ats",
-    "job-search",
-    "react",
-    "node.js",
-    "mongodb"
-  ],
-  "author": "ResumeCraft Team",
-  "license": "MIT",
   "devDependencies": {
-    "@playwright/test": "^1.57.0",
     "concurrently": "^8.2.2"
-  },
-  "workspaces": [
-    "backend",
-    "frontend"
-  ]
+  }
 }
+

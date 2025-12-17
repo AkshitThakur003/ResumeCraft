@@ -9,6 +9,12 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
+# Configure npm for better network reliability
+RUN npm config set fetch-timeout 600000 && \
+    npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000
+
 # Install all dependencies (including devDependencies for potential build steps)
 RUN npm ci
 
@@ -27,6 +33,12 @@ RUN addgroup -g 1001 -S nodejs && \
 
 # Copy package files
 COPY package*.json ./
+
+# Configure npm for better network reliability
+RUN npm config set fetch-timeout 600000 && \
+    npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000
 
 # Install only production dependencies
 RUN npm ci --only=production && \
@@ -47,4 +59,3 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 
 # Start the application
 CMD ["node", "server.js"]
-
