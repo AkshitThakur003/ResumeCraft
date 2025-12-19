@@ -33,7 +33,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: process.env.NODE_ENV === 'production' ? false : true,
-    chunkSizeWarningLimit: 1200,
+    chunkSizeWarningLimit: 600, // Reduced from 1200 for better optimization awareness
     rollupOptions: {
       output: {
         manualChunks: {
@@ -43,6 +43,7 @@ export default defineConfig({
           // Separate chunk for Recharts to enable lazy loading and reduce initial bundle size
           charts: ['recharts'],
           forms: ['react-hook-form'],
+          // GSAP is lazy-loaded, so don't include it in manual chunks
         },
       },
     },
