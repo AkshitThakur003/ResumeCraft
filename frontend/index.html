@@ -2,27 +2,58 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/x-icon" href="/wordmark-favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content="ResumeCraft - AI-Powered Resume Analysis and Job Tracking Platform" />
     <meta name="keywords" content="resume, ats, job tracking, ai, career" />
     <meta name="theme-color" content="#3b82f6" />
+    <link rel="manifest" href="/manifest.json" />
     
-    <!-- Preload critical fonts for better performance -->
+    <!-- Blocking script to prevent theme flicker (FOUC) - must run before React renders -->
+    <script>
+      (function() {
+        const theme = localStorage.getItem('theme') || 'system';
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        const resolvedTheme = theme === 'system' ? systemTheme : theme;
+        
+        // Apply theme class immediately
+        document.documentElement.classList.add(resolvedTheme);
+        
+        // Set color-scheme for faster browser rendering
+        document.documentElement.style.colorScheme = resolvedTheme;
+        
+        // Prevent flash by setting background color
+        document.documentElement.style.backgroundColor = resolvedTheme === 'dark' 
+          ? 'hsl(222.2, 47.4%, 11.2%)' 
+          : 'hsl(0, 0%, 100%)';
+      })();
+    </script>
+    
+    <!-- Optimized font loading for better performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" as="style" />
+    <!-- Load fonts with display=swap to prevent render blocking -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    </noscript>
     
     <!-- Open Graph -->
     <meta property="og:title" content="ResumeCraft" />
     <meta property="og:description" content="AI-Powered Resume Analysis and Job Tracking Platform" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://resumecraft.com" />
+    <meta property="og:image" content="/resumecraft-high-resolution-logo.png" />
     
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="ResumeCraft" />
     <meta name="twitter:description" content="AI-Powered Resume Analysis and Job Tracking Platform" />
+    <meta name="twitter:image" content="/resumecraft-high-resolution-logo.png" />
     
     <title>ResumeCraft - AI Resume Analysis</title>
   </head>

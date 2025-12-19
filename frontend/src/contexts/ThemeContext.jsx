@@ -87,40 +87,40 @@ export const ThemeProvider = ({ children }) => {
     isApplyingTheme.current = true
     const root = document.documentElement
     
-    // Add transition class for smooth color changes
+    // Batch all DOM reads first
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+    
+    // Add transition class BEFORE making changes
     root.classList.add('theme-transition')
     
-    // Use requestAnimationFrame to ensure DOM is ready
-    requestAnimationFrame(() => {
-      // Remove existing theme classes
-      root.classList.remove('light', 'dark')
-      
-      // Force reflow to ensure class removal is processed
-      void root.offsetHeight
-      
-      // Add new theme class
-      root.classList.add(theme)
-      
-      // Update meta theme-color for mobile browsers
-      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
-      if (metaThemeColor) {
-        metaThemeColor.setAttribute(
-          'content',
-          theme === THEMES.DARK ? '#1f2937' : '#ffffff'
-        )
-      }
-      
-      // Remove transition class after transition completes
-      setTimeout(() => {
-        root.classList.remove('theme-transition')
-        isApplyingTheme.current = false
-      }, 300)
-    })
+    // Use immediate synchronous update for instant response
+    // Then let CSS handle the smooth transition
+    root.classList.remove('light', 'dark')
+    root.classList.add(theme)
+    root.style.colorScheme = theme
+    
+    // Update meta theme-color synchronously
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute(
+        'content',
+        theme === THEMES.DARK ? '#1f2937' : '#ffffff'
+      )
+    }
+    
+    // Remove transition class after transition completes
+    setTimeout(() => {
+      root.classList.remove('theme-transition')
+      isApplyingTheme.current = false
+    }, 100) // Ultra-fast 100ms transition
   }, [])
 
   // Initialize theme on mount
   useEffect(() => {
     if (isInitialized.current) return
+    
+    // Check if theme was already set by blocking script
+    const root = document.documentElement
+    const alreadySet = root.classList.contains('light') || root.classList.contains('dark')
     
     // Get saved theme or default to system
     const savedTheme = localStorage.getItem('theme') || THEMES.SYSTEM
@@ -131,7 +131,11 @@ export const ThemeProvider = ({ children }) => {
     dispatch({ type: THEME_ACTIONS.SET_SYSTEM_THEME, payload: systemTheme })
     dispatch({ type: THEME_ACTIONS.SET_RESOLVED_THEME, payload: resolvedTheme })
 
-    applyTheme(resolvedTheme)
+    // Only apply if not already set by blocking script
+    if (!alreadySet) {
+      applyTheme(resolvedTheme)
+    }
+    
     isInitialized.current = true
   }, [applyTheme])
 
