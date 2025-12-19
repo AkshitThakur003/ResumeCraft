@@ -43,7 +43,8 @@ export default defineConfig({
           // Separate chunk for Recharts to enable lazy loading and reduce initial bundle size
           charts: ['recharts'],
           forms: ['react-hook-form'],
-          // GSAP is lazy-loaded, so don't include it in manual chunks
+          // GSAP chunk for animations (includes ScrollTrigger)
+          gsap: ['gsap', 'gsap/ScrollTrigger'],
         },
       },
     },
@@ -56,6 +57,8 @@ export default defineConfig({
       'axios',
       'framer-motion',
       'recharts',
+      'gsap',
+      'gsap/ScrollTrigger',
     ],
   },
 })

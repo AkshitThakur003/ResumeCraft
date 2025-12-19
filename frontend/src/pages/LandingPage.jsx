@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LandingHeader } from '../components/layout/LandingHeader';
 import { LandingFooter } from '../components/layout/LandingFooter';
@@ -10,26 +10,15 @@ import { Pricing } from '../components/sections/Pricing';
 import { FAQ } from '../components/sections/FAQ';
 import { useAuth } from '../contexts/AuthContext';
 import { ErrorBoundary } from '../components/ui';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-// Lazy load GSAP to reduce initial bundle size
-const loadGSAP = async () => {
-  const gsap = await import('gsap');
-  const { ScrollTrigger } = await import('gsap/ScrollTrigger');
-  gsap.default.registerPlugin(ScrollTrigger);
-  return gsap.default;
-};
+// Register ScrollTrigger plugin globally to ensure it's available for all components
+gsap.registerPlugin(ScrollTrigger);
 
 export const LandingPage = () => {
   const { isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
-  const [gsapLoaded, setGsapLoaded] = useState(false);
-
-  // Lazy load GSAP when component mounts
-  useEffect(() => {
-    loadGSAP().then(() => {
-      setGsapLoaded(true);
-    });
-  }, []);
 
   // Redirect authenticated users to dashboard
   useEffect(() => {
@@ -48,7 +37,7 @@ export const LandingPage = () => {
       <LandingHeader />
       <main className="flex-grow">
         <ErrorBoundary fallback={<div className="p-8 text-center text-muted-foreground">Hero section unavailable</div>}>
-          <Hero gsapReady={gsapLoaded} />
+          <Hero gsapReady={true} />
         </ErrorBoundary>
         <ErrorBoundary fallback={<div className="p-8 text-center text-muted-foreground">Features section unavailable</div>}>
           <BentoGrid />
