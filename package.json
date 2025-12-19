@@ -8,6 +8,7 @@
     "dev:redis": "docker-compose up redis",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm install && npm run build",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "test": "npm run test:backend && npm run test:frontend",
     "test:backend": "cd backend && npm test",
