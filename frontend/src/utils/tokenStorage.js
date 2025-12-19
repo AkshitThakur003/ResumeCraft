@@ -48,9 +48,23 @@ export const clearStoredToken = () => {
 
 /**
  * Store access token in appropriate storage
+ * @param {string} token - JWT access token
+ * @param {number|null} expiresAt - Optional expiration timestamp (auto-detected if not provided)
+ * @param {boolean|null} remember - Optional remember preference (uses existing preference if not provided)
  */
-export const storeAccessToken = (token, expiresAt, remember) => {
+export const storeAccessToken = (token, expiresAt = null, remember = null) => {
   if (!isBrowser || !token) return
+
+  // Auto-detect expiresAt from token if not provided
+  if (expiresAt === null) {
+    expiresAt = decodeTokenExpiry(token)
+  }
+
+  // Use existing remember preference if not provided
+  if (remember === null) {
+    const rememberPreference = localStorage.getItem(REMEMBER_ME_KEY)
+    remember = rememberPreference === null ? true : rememberPreference === 'true'
+  }
 
   const expString = expiresAt ? String(expiresAt) : ''
 
@@ -75,6 +89,13 @@ export const storeAccessToken = (token, expiresAt, remember) => {
   }
 
   setRememberPreference(remember)
+
+  // Dispatch token refreshed event for API module compatibility
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('tokenRefreshed', {
+      detail: { accessToken: token, expiresAt },
+    }))
+  }
 }
 
 /**

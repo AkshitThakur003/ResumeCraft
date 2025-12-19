@@ -143,6 +143,13 @@ router.get(
   listCoverLetters
 );
 
+// Get available templates (must be before /:id route to avoid route conflicts)
+router.get(
+  '/templates',
+  generalRateLimit,
+  getTemplates
+);
+
 // Get single cover letter
 router.get(
   '/:id',
@@ -177,13 +184,6 @@ router.post(
   createVersionValidation,
   handleValidationErrors,
   createVersion
-);
-
-// Get available templates
-router.get(
-  '/templates',
-  generalRateLimit,
-  getTemplates
 );
 
 // Export cover letter

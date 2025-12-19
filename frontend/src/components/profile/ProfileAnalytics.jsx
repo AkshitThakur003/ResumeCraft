@@ -1,7 +1,7 @@
 import React from 'react'
 import { Card, CardHeader, CardTitle, CardContent, LoadingWrapper, Button } from '../ui'
 import { Award, FileText, Sparkles } from 'lucide-react'
-import { format } from 'date-fns'
+import { formatDate } from '../../utils'
 
 const SummaryCard = ({ title, value, icon: Icon, accent = 'blue' }) => {
   const accentMap = {
@@ -28,14 +28,6 @@ const SummaryCard = ({ title, value, icon: Icon, accent = 'blue' }) => {
   )
 }
 
-const formatDate = (date) => {
-  if (!date) return 'N/A'
-  try {
-    return format(new Date(date), 'MMM d, yyyy')
-  } catch (error) {
-    return 'N/A'
-  }
-}
 
 export const ProfileAnalytics = ({ data, loading, error, onRetry }) => {
   return (

@@ -70,7 +70,9 @@ describe('ProfileAnalytics', () => {
     
     expect(screen.getByText('5')).toBeInTheDocument() // Total Resumes
     expect(screen.getByText('85%')).toBeInTheDocument() // Average Score
-    expect(screen.getByText('95%')).toBeInTheDocument() // Best Score
+    // Use getAllByText since 95% appears multiple times (Best Score and Top Resume score)
+    const bestScoreElements = screen.getAllByText('95%')
+    expect(bestScoreElements.length).toBeGreaterThan(0)
   })
 
   it('renders empty state when no data', () => {

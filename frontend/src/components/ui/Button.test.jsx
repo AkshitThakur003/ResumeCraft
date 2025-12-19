@@ -34,7 +34,9 @@ describe('Button', () => {
 
   it('renders as disabled when disabled prop is true', () => {
     render(<Button disabled>Disabled</Button>)
-    expect(screen.getByText('Disabled')).toBeDisabled()
+    // The button element is the parent, not the span with text
+    const button = screen.getByText('Disabled').closest('button')
+    expect(button).toBeDisabled()
   })
 
   it('does not call onClick when disabled', async () => {

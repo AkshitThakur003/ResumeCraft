@@ -154,12 +154,13 @@ describe('ThemeContext', () => {
       
       act(() => {
         result.current.setTheme(THEMES.DARK)
-        const icon = result.current.getThemeIcon()
-        const label = result.current.getThemeLabel()
-        
-        expect(icon).toBeDefined()
-        expect(label).toBe('Dark')
       })
+      
+      const icon = result.current.getThemeIcon()
+      const label = result.current.getThemeLabel()
+      
+      expect(icon).toBeDefined()
+      expect(label).toBe('Dark')
     })
 
     it('should not set invalid theme', () => {

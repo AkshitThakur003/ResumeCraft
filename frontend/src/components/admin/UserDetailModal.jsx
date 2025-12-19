@@ -8,7 +8,7 @@ import { Modal, ModalHeader, ModalTitle, ModalContent, Button, Input, Textarea }
 import { useToast } from '../ui'
 import { adminAPI } from '../../utils/api'
 import { fadeIn, scaleIn } from '../ui/motionVariants'
-import { cn } from '../../utils'
+import { cn, formatDateTime } from '../../utils'
 import { storeAccessToken } from '../../utils/tokenStorage'
 
 export const UserDetailModal = ({ isOpen, onClose, user }) => {
@@ -141,16 +141,6 @@ export const UserDetailModal = ({ isOpen, onClose, user }) => {
     user: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
   }
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
 
   if (!user) return null
 
@@ -249,7 +239,7 @@ export const UserDetailModal = ({ isOpen, onClose, user }) => {
                       Account Created
                     </div>
                     <div className="font-medium text-slate-900 dark:text-slate-100">
-                      {formatDate(user.createdAt)}
+                      {formatDateTime(user.createdAt)}
                     </div>
                   </motion.div>
 
@@ -293,7 +283,7 @@ export const UserDetailModal = ({ isOpen, onClose, user }) => {
                         Last Login
                       </div>
                       <div className="font-medium text-slate-900 dark:text-slate-100">
-                        {formatDate(user.lastLogin)}
+                        {formatDateTime(user.lastLogin)}
                       </div>
                     </motion.div>
                   )}
@@ -308,7 +298,7 @@ export const UserDetailModal = ({ isOpen, onClose, user }) => {
                         Deactivated At
                       </div>
                       <div className="font-medium text-red-700 dark:text-red-300">
-                        {formatDate(user.deactivatedAt)}
+                        {formatDateTime(user.deactivatedAt)}
                       </div>
                     </motion.div>
                   )}

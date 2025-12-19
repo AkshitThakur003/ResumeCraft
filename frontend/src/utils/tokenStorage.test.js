@@ -129,19 +129,25 @@ describe('tokenStorage', () => {
     })
 
     it('returns null token when no token is stored', () => {
-      localStorageMock.getItem
-        .mockReturnValueOnce('false')
-        .mockReturnValueOnce(null)
-        .mockReturnValueOnce(null)
-      sessionStorage.getItem
-        .mockReturnValueOnce(null)
-        .mockReturnValueOnce(null)
+      // Clear the store and reset mocks
+      localStorageMock.clear()
+      sessionStorageMock.clear()
+      
+      // Use mockImplementation to return specific values based on key
+      localStorageMock.getItem.mockImplementation((key) => {
+        if (key === 'rememberMe') return null // null means default to true
+        if (key === 'accessToken') return null
+        if (key === 'accessTokenExpiresAt') return null
+        return null
+      })
+      
+      sessionStorageMock.getItem.mockImplementation(() => null)
 
       const result = getStoredAccessToken()
 
       expect(result.token).toBeNull()
       expect(result.expiresAt).toBeNull()
-      expect(result.rememberMe).toBe(false)
+      expect(result.rememberMe).toBe(true) // null defaults to true
     })
   })
 

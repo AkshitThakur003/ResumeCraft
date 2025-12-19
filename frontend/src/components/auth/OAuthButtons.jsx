@@ -11,13 +11,17 @@ export const OAuthButtons = ({ providers, loading, error }) => {
     return null
   }
 
+  const shouldShowDivider = !loading && !error && providers.length > 0
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4">
-        <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
-        <span className="text-sm text-muted-foreground">Or continue with</span>
-        <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
-      </div>
+      {shouldShowDivider && (
+        <div className="flex items-center gap-4">
+          <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
+          <span className="text-sm text-muted-foreground">Or continue with</span>
+          <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
+        </div>
+      )}
 
       {loading && (
         <div className="flex items-center justify-center text-sm text-muted-foreground">Loading options…</div>

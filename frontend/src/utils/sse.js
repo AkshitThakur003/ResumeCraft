@@ -68,6 +68,30 @@ export const createSSEConnection = (url, options = {}) => {
             const { done, value } = await reader.read();
 
             if (done) {
+              // Process any remaining buffer as SSE format before breaking
+              if (buffer.trim()) {
+                let finalEvent = 'message';
+                let finalData = '';
+                const finalLines = buffer.split('\n');
+                
+                for (const line of finalLines) {
+                  if (line.startsWith('event:')) {
+                    finalEvent = line.substring(6).trim();
+                  } else if (line.startsWith('data:')) {
+                    finalData += line.substring(5).trim() + '\n';
+                  }
+                }
+                
+                // Process final event if we have data (even without trailing empty line)
+                if (finalData.trim()) {
+                  try {
+                    const parsedData = JSON.parse(finalData.trim());
+                    handleEvent(finalEvent, parsedData);
+                  } catch (parseError) {
+                    logger.error('Error parsing final SSE data:', parseError, { event: finalEvent, data: finalData });
+                  }
+                }
+              }
               break;
             }
 
@@ -96,16 +120,6 @@ export const createSSEConnection = (url, options = {}) => {
                   event = 'message';
                 }
               }
-            }
-          }
-
-          // Process any remaining data
-          if (buffer.trim()) {
-            try {
-              const parsedData = JSON.parse(buffer.trim());
-              handleEvent('message', parsedData);
-            } catch (parseError) {
-              logger.error('Error parsing final SSE data:', parseError);
             }
           }
         } catch (streamError) {
@@ -211,6 +225,33 @@ export const createSSEConnectionPOST = (url, body, options = {}) => {
             const { done, value } = await reader.read();
 
             if (done) {
+              // Process any remaining buffer as SSE format before breaking
+              if (buffer.trim()) {
+                let finalEvent = 'message';
+                let finalData = '';
+                const finalLines = buffer.split('\n');
+                
+                for (const line of finalLines) {
+                  if (line.startsWith('event:')) {
+                    finalEvent = line.substring(6).trim();
+                  } else if (line.startsWith('data:')) {
+                    finalData += line.substring(5).trim() + '\n';
+                  } else if (line.startsWith(':')) {
+                    // Comment line, ignore
+                    continue;
+                  }
+                }
+                
+                // Process final event if we have data (even without trailing empty line)
+                if (finalData.trim()) {
+                  try {
+                    const parsedData = JSON.parse(finalData.trim());
+                    handleEvent(finalEvent, parsedData);
+                  } catch (parseError) {
+                    logger.error('Error parsing final SSE data:', parseError, { event: finalEvent, data: finalData });
+                  }
+                }
+              }
               break;
             }
 
@@ -241,15 +282,6 @@ export const createSSEConnectionPOST = (url, body, options = {}) => {
                 // Comment line, ignore
                 continue;
               }
-            }
-          }
-
-          if (buffer.trim()) {
-            try {
-              const parsedData = JSON.parse(buffer.trim());
-              handleEvent('message', parsedData);
-            } catch (parseError) {
-              logger.error('Error parsing final SSE data:', parseError);
             }
           }
         } catch (streamError) {
