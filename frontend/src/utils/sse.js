@@ -31,7 +31,8 @@ export const createSSEConnection = (url, options = {}) => {
   const authToken = token || headers.authorization?.replace('Bearer ', '');
   
   // Build full URL with base URL
-  const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  // VITE_API_URL already includes /api, so use it as-is
+  const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
   const fullURL = url.startsWith('http') ? url : `${baseURL}${url.startsWith('/') ? url : `/${url}`}`;
 
   // Create EventSource with token in query params or use fetch for custom headers
@@ -173,7 +174,8 @@ export const createSSEConnectionPOST = (url, body, options = {}) => {
   const { token: authToken } = getStoredAccessToken();
   
   // Build full URL
-  const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  // VITE_API_URL already includes /api, so use it as-is
+  const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
   const fullURL = url.startsWith('http') ? url : `${baseURL}${url.startsWith('/') ? url : `/${url}`}`;
 
   let abortController = new AbortController();

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, ArrowRight, FileText } from 'lucide-react';
 import { ICON_SIZES, ICON_STROKE_WIDTH } from '../../constants/icons';
+import gsap from 'gsap';
 
 export const LandingHeader = () => {
   const [scrolled, setScrolled] = useState(false);

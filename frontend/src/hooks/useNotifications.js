@@ -298,8 +298,9 @@ export const useNotifications = () => {
       }
 
       try {
-        const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
-        const sseUrl = `${baseURL}/api/notifications/stream`
+        // VITE_API_URL already includes /api, so remove /api from the path
+        const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+        const sseUrl = `${baseURL}/notifications/stream`
         
         // Get auth token using centralized token storage utility
         const { token } = getStoredAccessToken()

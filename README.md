@@ -49,7 +49,7 @@ cd ResumeCraft
 npm run install:all
 
 # Setup environment variables
-# Backend: Copy backend/.env.example to backend/.env
+# Backend: Create backend/.env (see Environment Variables section below)
 # Frontend: Create frontend/.env.development
 
 # Start Redis (optional)
@@ -60,7 +60,7 @@ npm run dev
 ```
 
 **Access:**
-- Frontend: http://localhost:5173
+- Frontend: http://localhost:3000
 - Backend API: http://localhost:5000
 - API Docs: http://localhost:5000/api-docs
 
@@ -82,7 +82,7 @@ CLOUDINARY_API_SECRET=your-secret
 SMTP_HOST=smtp.gmail.com
 SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password
-CLIENT_URL=http://localhost:5173
+CLIENT_URL=http://localhost:3000
 ```
 
 ### Frontend (`frontend/.env.development`)
@@ -104,7 +104,7 @@ npm run dev:backend     # Backend only
 
 # Testing
 npm test                 # Run all tests
-npm run test:e2e         # E2E tests
+npx playwright test      # E2E tests (requires Playwright)
 
 # Backend
 cd backend

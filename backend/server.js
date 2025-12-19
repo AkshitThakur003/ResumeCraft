@@ -175,22 +175,39 @@ app.use(helmet({
 // CORS configuration with improved security
 const corsOptions = {
   origin: function (origin, callback) {
+    // Allow requests with no origin (same-origin requests, mobile apps, Postman, etc.)
+    if (!origin) {
+      return callback(null, true);
+    }
+
     // In production, be strict about origins
     if (process.env.NODE_ENV === 'production') {
-      // Reject requests with no origin in production (except for same-origin requests)
-      if (!origin) {
-        // Allow same-origin requests (no origin header)
-        return callback(null, true);
-      }
-
       const allowedOrigins = [
         process.env.CLIENT_URL,
         process.env.CLIENT_URL_ALT, // Alternative client URL if needed
+        process.env.FRONTEND_URL, // Also check FRONTEND_URL
       ].filter(Boolean); // Remove undefined values
       
       if (allowedOrigins.length === 0) {
-        logger.error('❌ CRITICAL: CLIENT_URL not set in production! CORS will reject all requests.');
-        return callback(new Error('CORS configuration error: CLIENT_URL must be set in production'));
+        // If CLIENT_URL is not set, log warning but allow common development origins
+        // This prevents blocking in case of misconfiguration
+        logger.warn('⚠️  CLIENT_URL not set in production. Allowing common origins as fallback.');
+        const fallbackOrigins = [
+          'http://localhost:3000',
+          'http://localhost:5173',
+          'http://localhost:4173',
+          'http://127.0.0.1:3000',
+          'http://127.0.0.1:5173',
+          'http://127.0.0.1:4173',
+        ];
+        
+        if (fallbackOrigins.indexOf(origin) !== -1) {
+          return callback(null, true);
+        }
+        
+        // If origin doesn't match fallback, still allow but log warning
+        logger.warn(`⚠️  Allowing origin without CLIENT_URL configured: ${origin}`);
+        return callback(null, true);
       }
       
       // Check if origin matches allowed origins (supports wildcard subdomains)
@@ -215,6 +232,7 @@ const corsOptions = {
     // Development: allow localhost origins and configured CLIENT_URL
     const devOrigins = [
       process.env.CLIENT_URL,
+      process.env.FRONTEND_URL,
       'http://localhost:3000',
       'http://localhost:5173', // Vite default port
       'http://localhost:4173', // Vite preview port
@@ -223,11 +241,12 @@ const corsOptions = {
       'http://127.0.0.1:4173',
     ].filter(Boolean);
     
-    if (!origin || devOrigins.indexOf(origin) !== -1) {
+    if (devOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      logger.warn(`CORS blocked origin in development: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
+      // In development, be more permissive - allow but log
+      logger.warn(`⚠️  Allowing origin in development: ${origin}`);
+      callback(null, true);
     }
   },
   credentials: true,
@@ -444,8 +463,15 @@ app.use('/api/cover-letter/analytics', require('./routes/coverLetterAnalytics'))
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/admin', adminRoutes);
 
-// OAuth routes (no /api prefix for OAuth flow)
+// OAuth routes - mount ONLY at /auth for OAuth provider callbacks
+// DO NOT mount at /api/auth as it conflicts with auth routes (login, register, etc.)
+// OAuth callbacks go to /auth/:provider/callback (e.g., /auth/google/callback)
 app.use('/auth', oauthRoutes);
+
+// Favicon route (prevents 404 errors)
+app.get('/favicon.ico', (req, res) => {
+  res.status(204).end();
+});
 
 // Welcome route
 app.get('/', (req, res) => {

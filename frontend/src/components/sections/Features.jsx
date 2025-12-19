@@ -3,6 +3,9 @@ import { ShieldCheck, Zap, Layers, ArrowRight, MousePointer2, Check } from 'luci
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
+// Register ScrollTrigger plugin
+gsap.registerPlugin(ScrollTrigger);
+
 export const Features = () => {
   const sectionRef = useRef(null);
 
