@@ -1,7 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Search, BellRing, Kanban, BrainCircuit, FileText } from 'lucide-react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { logger } from '../../utils/logger';
 
 const IconTooltip = ({ content, children, theme = 'dark' }) => {
   const bgClass = theme === 'dark' ? 'bg-slate-900 text-white border-slate-800' : 'bg-white text-slate-900 border-slate-200';
@@ -20,27 +19,81 @@ const IconTooltip = ({ content, children, theme = 'dark' }) => {
 
 export const BentoGrid = () => {
   const gridRef = useRef(null);
+  const [gsapReady, setGsapReady] = useState(false);
 
+  // Lazy load GSAP
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Staggered reveal of grid items
-      ScrollTrigger.batch(".bento-card", {
-        onEnter: (batch) => {
-          gsap.to(batch, {
-            autoAlpha: 1,
-            y: 0,
-            stagger: 0.1,
-            duration: 0.8,
-            ease: "power3.out"
-          });
-        },
-        start: "top 85%",
-        once: true
-      });
-    }, gridRef);
+    let isMounted = true;
 
-    return () => ctx.revert();
+    const loadGSAP = async () => {
+      try {
+        const gsap = await import('gsap');
+        const { ScrollTrigger } = await import('gsap/ScrollTrigger');
+        gsap.default.registerPlugin(ScrollTrigger);
+        
+        if (isMounted) {
+          setGsapReady(true);
+        }
+      } catch (error) {
+        logger.error('Failed to load GSAP:', error);
+        // Fallback: show cards without animation
+        if (isMounted) {
+          setGsapReady(false);
+          // Show cards immediately if GSAP fails
+          const cards = document.querySelectorAll('.bento-card');
+          cards.forEach(card => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+          });
+        }
+      }
+    };
+
+    loadGSAP();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  // Initialize animations when GSAP is ready
+  useEffect(() => {
+    if (!gsapReady || !gridRef.current) return;
+
+    let ctx;
+    
+    const initAnimations = async () => {
+      const gsap = (await import('gsap')).default;
+      const { ScrollTrigger } = await import('gsap/ScrollTrigger');
+      
+      ctx = gsap.context(() => {
+        // Staggered reveal of grid items
+        ScrollTrigger.batch(".bento-card", {
+          onEnter: (batch) => {
+            gsap.to(batch, {
+              autoAlpha: 1,
+              y: 0,
+              stagger: 0.1,
+              duration: 0.8,
+              ease: "power3.out"
+            });
+          },
+          start: "top 85%",
+          once: true
+        });
+      }, gridRef);
+
+      return ctx;
+    };
+
+    initAnimations().then(animationCtx => {
+      ctx = animationCtx;
+    });
+
+    return () => {
+      if (ctx) ctx.revert();
+    };
+  }, [gsapReady]);
 
   return (
     <section ref={gridRef} id="features" className="py-24 bg-white">

@@ -3,9 +3,28 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
 import { initSentry, captureException } from './utils/sentry'
+import { initWebVitals, initLongTaskMonitoring } from './utils/performance'
+import { logger } from './utils/logger'
 
 // Initialize Sentry error tracking
 initSentry()
+
+// Initialize performance monitoring
+initWebVitals()
+initLongTaskMonitoring()
+
+// Register service worker for PWA
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then((registration) => {
+        logger.info('Service Worker registered:', registration);
+      })
+      .catch((error) => {
+        logger.warn('Service Worker registration failed:', error);
+      });
+  });
+}
 
 // Error boundary for production
 class ErrorBoundary extends React.Component {
@@ -28,9 +47,9 @@ class ErrorBoundary extends React.Component {
       },
     });
     
-    // Also log to console in development
+    // Also log using logger in development
     if (import.meta.env.DEV) {
-      console.error('Error caught by boundary:', error, errorInfo);
+      logger.error('Error caught by boundary:', error, errorInfo);
     }
   }
 

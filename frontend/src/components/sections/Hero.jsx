@@ -1,18 +1,56 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle2, Sparkles, FileText, Target, TrendingUp, Bot } from 'lucide-react';
-import gsap from 'gsap';
+import { logger } from '../../utils/logger';
 
-export const Hero = () => {
+export const Hero = ({ gsapReady: externalGsapReady }) => {
   const containerRef = useRef(null);
   const titleRef = useRef(null);
   const textRef = useRef(null);
   const buttonsRef = useRef(null);
   const featuresRef = useRef(null);
   const visualRef = useRef(null);
+  const [gsapReady, setGsapReady] = useState(false);
+
+  // Lazy load GSAP if not provided externally
+  useEffect(() => {
+    if (externalGsapReady) {
+      setGsapReady(true);
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadGSAP = async () => {
+      try {
+        const gsap = await import('gsap');
+        if (isMounted) {
+          setGsapReady(true);
+        }
+      } catch (error) {
+        logger.error('Failed to load GSAP:', error);
+        if (isMounted) {
+          setGsapReady(false);
+        }
+      }
+    };
+
+    loadGSAP();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [externalGsapReady]);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
+    if (!gsapReady || !containerRef.current) return;
+
+    let ctx;
+
+    const initAnimations = async () => {
+      const gsap = (await import('gsap')).default;
+      
+      ctx = gsap.context(() => {
       // 1. Initial Staggered Reveal
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
@@ -111,10 +149,19 @@ export const Hero = () => {
         delay: 1
       });
 
-    }, containerRef);
+      }, containerRef);
 
-    return () => ctx.revert();
-  }, []);
+      return ctx;
+    };
+
+    initAnimations().then(animationCtx => {
+      ctx = animationCtx;
+    });
+
+    return () => {
+      if (ctx) ctx.revert();
+    };
+  }, [gsapReady]);
 
   return (
     <section ref={containerRef} className="relative pt-32 pb-20 lg:pt-48 lg:pb-40 overflow-hidden">
