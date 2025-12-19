@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { getResume, analyzeResume, analyzeResumeStream, getAnalysis, pollAnalysisStatus, listAnalyses } from '../utils/resumeAPI';
@@ -26,20 +26,7 @@ export const ResumeAnalysisPage = () => {
   const [error, setError] = useState(null);
   const [cancelStream, setCancelStream] = useState(null);
 
-  useEffect(() => {
-    loadData();
-  }, [id, analysisId]);
-
-  // Cleanup SSE stream on unmount
-  useEffect(() => {
-    return () => {
-      if (cancelStream) {
-        cancelStream();
-      }
-    };
-  }, [cancelStream]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -63,7 +50,21 @@ export const ResumeAnalysisPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, analysisId, showToast]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Cleanup SSE stream on unmount
+  useEffect(() => {
+    return () => {
+      if (cancelStream) {
+        cancelStream();
+      }
+    };
+  }, [cancelStream]);
+
 
   const handleAnalyze = async (analysisType = 'general', jobDescription = null) => {
     // Cancel any existing stream

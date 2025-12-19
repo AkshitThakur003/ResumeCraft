@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo, useCallback } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Home, FileText, Settings, Mail, ChevronLeft, ChevronRight, Shield } from 'lucide-react'
@@ -7,6 +7,7 @@ import { createSidebarPulseVariants } from '../ui/motionVariants'
 import { useReducedMotion } from 'framer-motion'
 import { Button } from '../ui'
 import { useAuth } from '../../contexts/AuthContext'
+import { ICON_SIZES, ICON_STROKE_WIDTH } from '../../constants/icons'
 
 const baseNavigation = [
   { name: 'Home', href: '/dashboard', icon: Home },
@@ -15,15 +16,23 @@ const baseNavigation = [
   { name: 'Settings', href: '/profile', icon: Settings },
 ]
 
-export const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
+/**
+ * Sidebar component - Memoized to prevent unnecessary re-renders
+ */
+export const Sidebar = React.memo(({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
   const location = useLocation()
   const shouldReduceMotion = useReducedMotion()
   const { user } = useAuth()
   
-  // Add admin link if user is admin
-  const navigation = user?.role === 'admin' 
-    ? [...baseNavigation, { name: 'Admin', href: '/admin', icon: Shield }]
-    : baseNavigation
+  // Memoize navigation array to prevent recreation on every render
+  const navigation = useMemo(() => {
+    return user?.role === 'admin' 
+      ? [...baseNavigation, { name: 'Admin', href: '/admin', icon: Shield }]
+      : baseNavigation
+  }, [user?.role])
+
+  // Memoize active pathname check
+  const activePath = useMemo(() => location.pathname, [location.pathname])
 
   return (
     <>
@@ -36,7 +45,7 @@ export const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
           className="fixed inset-0 z-40 lg:hidden"
           onClick={onClose}
         >
-          <div className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-foreground/50 backdrop-blur-sm" />
         </motion.div>
       )}
 
@@ -57,18 +66,18 @@ export const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
         )}
       >
         {/* Glassmorphism sidebar */}
-        <div className="h-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200 dark:border-slate-800 shadow-2xl lg:shadow-none flex flex-col">
+        <div className="h-full bg-background/80 backdrop-blur-xl border-r border-border shadow-2xl lg:shadow-none flex flex-col">
           {/* Logo */}
           <div className={cn(
-            "flex items-center gap-3 p-6 border-b border-slate-200 dark:border-slate-800 transition-all duration-300",
+            "flex items-center gap-3 p-6 border-b border-border transition-all duration-300",
             isCollapsed && "justify-center px-2"
           )}>
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-600/10 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 flex-shrink-0">
-              <FileText className="h-6 w-6" strokeWidth={2} />
+            <div className="flex items-center justify-center w-16 h-16 rounded-xl bg-primary/10 flex-shrink-0 p-1.5">
+              <FileText className="h-10 w-10 text-primary" strokeWidth={ICON_STROKE_WIDTH.normal} />
             </div>
             <motion.h1 
               className={cn(
-                "text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight whitespace-nowrap",
+                "h4 text-foreground whitespace-nowrap",
                 isCollapsed && "lg:hidden"
               )}
               initial={false}
@@ -91,17 +100,13 @@ export const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
               // Check if route is active - support nested routes
               let isActive = false
               if (item.href === '/resumes') {
-                // For Resumes, check if pathname starts with /resumes
-                isActive = location.pathname.startsWith('/resumes')
+                isActive = activePath.startsWith('/resumes')
               } else if (item.href === '/cover-letters') {
-                // For Cover Letters, check if pathname starts with /cover-letters
-                isActive = location.pathname.startsWith('/cover-letters')
+                isActive = activePath.startsWith('/cover-letters')
               } else if (item.href === '/admin') {
-                // For Admin, check if pathname starts with /admin
-                isActive = location.pathname.startsWith('/admin')
+                isActive = activePath.startsWith('/admin')
               } else {
-                // For other routes, exact match
-                isActive = location.pathname === item.href
+                isActive = activePath === item.href
               }
               return (
                 <Link
@@ -112,25 +117,25 @@ export const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
                     'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group relative overflow-hidden',
                     isCollapsed && 'justify-center px-2',
                     isActive
-                      ? 'text-white dark:text-slate-50'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/50 dark:hover:bg-slate-800/50'
+                      ? 'text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                   )}
                   title={isCollapsed ? item.name : undefined}
                 >
                   {/* Active Background with Gradient */}
                   {isActive && (
                     <motion.div
-                      className="absolute inset-0 bg-brand-600 dark:bg-brand-600 shadow-md shadow-brand-600/20"
+                      className="absolute inset-0 bg-primary shadow-md shadow-primary/20"
                       layoutId="activeNav"
                       transition={{ type: "spring", stiffness: 300, damping: 30 }}
                     />
                   )}
                   
-                  <span className={cn("relative z-10 flex items-center justify-center transition-transform duration-200 group-hover:scale-110 flex-shrink-0", isActive && "text-white dark:text-slate-50")}>
-                    {React.createElement(item.icon, { className: 'h-5 w-5', strokeWidth: 2 })}
+                  <span className={cn("relative z-10 flex items-center justify-center transition-transform duration-200 group-hover:scale-110 flex-shrink-0", isActive && "text-primary-foreground")}>
+                    {React.createElement(item.icon, { className: ICON_SIZES.md, strokeWidth: ICON_STROKE_WIDTH.normal })}
                   </span>
                   <motion.span 
-                    className={cn("relative z-10 font-medium whitespace-nowrap", isActive && "text-white dark:text-slate-50")}
+                    className={cn("relative z-10 font-medium whitespace-nowrap", isActive && "text-primary-foreground")}
                     initial={false}
                     animate={{
                       opacity: isCollapsed ? 0 : 1,
@@ -148,19 +153,19 @@ export const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
 
           {/* Sidebar footer */}
           <div className={cn(
-            "p-4 border-t border-slate-200 dark:border-slate-800 transition-all duration-300",
+            "p-4 border-t border-border transition-all duration-300",
             isCollapsed && "px-2"
           )}>
             <AnimatePresence>
               {!isCollapsed && (
                 <motion.div 
-                  className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-800/50 rounded-lg p-3 backdrop-blur-sm border border-slate-200 dark:border-slate-700 text-center"
+                  className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3 backdrop-blur-sm border border-border text-center"
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
                 >
-                  <p className="font-medium text-slate-700 dark:text-slate-300">ResumeCraft v1.0</p>
+                  <p className="font-medium text-foreground">ResumeCraft v1.0</p>
                   <p className="mt-1 opacity-70">Crafted for your career</p>
                 </motion.div>
               )}
@@ -172,7 +177,7 @@ export const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
               size="icon"
               onClick={onToggleCollapse}
               className={cn(
-                "hidden lg:flex w-full mt-2 h-10 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200",
+                "hidden lg:flex w-full mt-2 h-10 rounded-xl border border-border text-muted-foreground hover:bg-accent transition-all duration-200",
                 isCollapsed && "justify-center"
               )}
               aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -182,9 +187,9 @@ export const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
                 transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
               >
                 {isCollapsed ? (
-                  <ChevronRight className="h-5 w-5" strokeWidth={2} />
+                  <ChevronRight className={ICON_SIZES.md} strokeWidth={ICON_STROKE_WIDTH.normal} />
                 ) : (
-                  <ChevronLeft className="h-5 w-5" strokeWidth={2} />
+                  <ChevronLeft className={ICON_SIZES.md} strokeWidth={ICON_STROKE_WIDTH.normal} />
                 )}
               </motion.div>
             </Button>
@@ -193,5 +198,7 @@ export const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
       </motion.div>
     </>
   )
-}
+})
+
+Sidebar.displayName = 'Sidebar'
 

@@ -1,15 +1,11 @@
 import React, { Suspense, lazy } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider, useAuth } from './contexts/AuthContext'
-import { ThemeProvider } from './contexts/ThemeContext'
-import { ToastProvider } from './contexts/ToastContext'
-import { ErrorProvider } from './contexts/ErrorContext'
-import { NotificationsProvider } from './contexts/NotificationsContext'
+import { useAuth } from './contexts/AuthContext'
+import { AppProviders } from './components/providers/AppProviders'
 import { ProtectedRoute, PublicRoute, AdminRoute } from './components/auth'
 import { DashboardLayout, AuthLayout } from './components/layout'
 import { ErrorBoundary, PageLoading } from './components/ui'
 import { RouteErrorBoundary } from './components/ui/RouteErrorBoundary'
-import { useNetworkStatus } from './hooks/useNetworkStatus'
 
 // Lazy load pages for better performance and code splitting
 const LandingPage = lazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })))
@@ -42,22 +38,11 @@ const NavigateWithAuth = () => {
   return <Navigate to={isAuthenticated ? '/dashboard' : '/'} replace />
 }
 
-// Component to handle network status monitoring
-const NetworkMonitor = () => {
-  useNetworkStatus()
-  return null
-}
-
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider>
-        <AuthProvider>
-          <NotificationsProvider>
-            <ToastProvider>
-              <ErrorProvider>
-                <NetworkMonitor />
-                <Router>
+      <AppProviders>
+        <Router>
                 <div className="App">
                   <Suspense fallback={<PageLoading message="Loading page..." />}>
                   <Routes>
@@ -161,11 +146,7 @@ function App() {
                   </Suspense>
                 </div>
               </Router>
-            </ErrorProvider>
-          </ToastProvider>
-          </NotificationsProvider>
-        </AuthProvider>
-      </ThemeProvider>
+      </AppProviders>
     </ErrorBoundary>
   )
 }

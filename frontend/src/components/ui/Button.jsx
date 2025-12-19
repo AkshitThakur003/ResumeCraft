@@ -27,7 +27,7 @@ export const Button = React.forwardRef(
       secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm',
       ghost: 'hover:bg-accent hover:text-accent-foreground',
       link: 'underline-offset-4 hover:underline text-primary',
-      brand: 'bg-brand-600 text-white hover:bg-brand-700 shadow-sm hover:shadow-brand-500/20',
+      brand: 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow-md hover:shadow-primary/20',
     }
     
     // Mobile-friendly sizes with minimum tap targets (44px)

@@ -80,3 +80,6 @@ export { default as Breadcrumbs } from './Breadcrumbs'
 
 // Pagination
 export { Pagination } from './Pagination'
+
+// Lazy Image
+export { LazyImage } from './LazyImage'

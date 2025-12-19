@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import { authAPI, userAPI, handleApiError } from '../utils/api'
 import { decodeTokenExpiry, storeAccessToken, clearStoredToken, getStoredAccessToken, setRememberPreference } from '../utils/tokenStorage'
 import { AUTH_ACTIONS } from './useAuthReducer'
@@ -319,7 +319,8 @@ export const useAuthActions = (state, dispatch) => {
     }
   }
 
-  return {
+  // Memoize actions object to prevent recreation on every render
+  return useMemo(() => ({
     login,
     register,
     logout,
@@ -333,6 +334,20 @@ export const useAuthActions = (state, dispatch) => {
     clearError,
     checkAuth,
     setRememberMe,
-  }
+  }), [
+    login,
+    register,
+    logout,
+    updateProfile,
+    changePassword,
+    deleteAccount,
+    verifyEmail,
+    resendVerification,
+    forgotPassword,
+    resetPassword,
+    clearError,
+    checkAuth,
+    setRememberMe,
+  ])
 }
 

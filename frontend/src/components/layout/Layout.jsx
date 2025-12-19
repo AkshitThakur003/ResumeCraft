@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback, useMemo } from 'react'
 import { Outlet, Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { FileText } from 'lucide-react'
+import { ICON_SIZES, ICON_STROKE_WIDTH } from '../../constants/icons'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTheme } from '../../contexts/ThemeContext'
 import { ConfirmModal, Breadcrumbs, NotificationsCenter, Button } from '../ui'
@@ -18,46 +19,60 @@ export const DashboardLayout = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     await logout()
     navigate('/login')
-  }
+  }, [logout, navigate])
+
+  // Memoize callbacks to prevent unnecessary re-renders
+  const handleCloseSidebar = useCallback(() => setSidebarOpen(false), [])
+  const handleToggleCollapse = useCallback(() => setSidebarCollapsed(prev => !prev), [])
+  const handleOpenSidebar = useCallback(() => setSidebarOpen(true), [])
+  const handleOpenLogoutModal = useCallback(() => setShowLogoutModal(true), [])
+  const handleCloseLogoutModal = useCallback(() => setShowLogoutModal(false), [])
+  const handleOpenNotifications = useCallback(() => setNotificationsOpen(true), [])
+  const handleCloseNotifications = useCallback(() => setNotificationsOpen(false), [])
+
+  // Memoize keyboard shortcut callbacks
+  const handleEscapeKey = useCallback(() => {
+    if (sidebarOpen) setSidebarOpen(false)
+    if (showLogoutModal) setShowLogoutModal(false)
+  }, [sidebarOpen, showLogoutModal])
+
+  const handleToggleSidebarKey = useCallback((e) => {
+    e.preventDefault()
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(prev => !prev)
+    } else {
+      setSidebarCollapsed(prev => !prev)
+    }
+  }, [])
 
   // Keyboard shortcuts for navigation
-  useKeyboardShortcuts([
+  const keyboardShortcuts = useMemo(() => [
     {
       key: 'Escape',
-      callback: () => {
-        if (sidebarOpen) setSidebarOpen(false)
-        if (showLogoutModal) setShowLogoutModal(false)
-      },
+      callback: handleEscapeKey,
       enabled: true,
     },
     {
       key: 'b',
       ctrlKey: true,
-      callback: (e) => {
-        // Cmd/Ctrl+B to toggle sidebar (mobile) or collapse (desktop)
-        e.preventDefault()
-        // On mobile, toggle open/close. On desktop, toggle collapse
-        if (window.innerWidth < 1024) {
-          setSidebarOpen(prev => !prev)
-        } else {
-          setSidebarCollapsed(prev => !prev)
-        }
-      },
+      callback: handleToggleSidebarKey,
       enabled: true,
     },
-  ])
+  ], [handleEscapeKey, handleToggleSidebarKey])
+
+  useKeyboardShortcuts(keyboardShortcuts)
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+    <div className="min-h-screen bg-background transition-colors duration-300">
       <AnimatePresence>
         <Sidebar 
           isOpen={sidebarOpen} 
           isCollapsed={sidebarCollapsed}
-          onClose={() => setSidebarOpen(false)}
-          onToggleCollapse={() => setSidebarCollapsed(prev => !prev)}
+          onClose={handleCloseSidebar}
+          onToggleCollapse={handleToggleCollapse}
         />
       </AnimatePresence>
 
@@ -67,9 +82,9 @@ export const DashboardLayout = () => {
       }`}>
         <Header 
           isSidebarCollapsed={sidebarCollapsed}
-          onMenuClick={() => setSidebarOpen(true)}
-          onLogoutClick={() => setShowLogoutModal(true)}
-          onNotificationsClick={() => setNotificationsOpen(true)}
+          onMenuClick={handleOpenSidebar}
+          onLogoutClick={handleOpenLogoutModal}
+          onNotificationsClick={handleOpenNotifications}
         />
 
         {/* Page content with animation */}
@@ -84,7 +99,7 @@ export const DashboardLayout = () => {
       {/* Logout confirmation modal */}
       <ConfirmModal
         isOpen={showLogoutModal}
-        onClose={() => setShowLogoutModal(false)}
+        onClose={handleCloseLogoutModal}
         onConfirm={handleLogout}
         title="Sign Out"
         description="Are you sure you want to sign out?"
@@ -95,7 +110,7 @@ export const DashboardLayout = () => {
       {/* Notifications Center */}
       <NotificationsCenter 
         isOpen={notificationsOpen} 
-        onClose={() => setNotificationsOpen(false)} 
+        onClose={handleCloseNotifications} 
       />
     </div>
   )
@@ -107,24 +122,24 @@ export const AuthLayout = () => {
   const shouldReduceMotion = useReducedMotion()
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
        {/* Background Ambient Orbs */}
-       <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-brand-500/5 rounded-full blur-3xl pointer-events-none" />
-       <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-3xl pointer-events-none" />
+       <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+       <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
       {/* Header with glassmorphism */}
       <motion.header 
-        className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 z-10"
+        className="bg-background/50 backdrop-blur-md border-b border-border z-10"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: shouldReduceMotion ? 0 : 0.5 }}
       >
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-600 text-white shadow-lg shadow-brand-600/20 transition-transform duration-300 group-hover:scale-105">
-              <FileText className="h-6 w-6" strokeWidth={2} />
+            <div className="flex items-center justify-center w-14 h-14 rounded-xl bg-primary/10 shadow-lg shadow-primary/20 transition-transform duration-300 group-hover:scale-105 p-1.5">
+              <FileText className="h-10 w-10 text-primary" strokeWidth={ICON_STROKE_WIDTH.normal} />
             </div>
-            <span className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+            <span className="h4 text-foreground">
               ResumeCraft
             </span>
           </Link>
@@ -133,7 +148,7 @@ export const AuthLayout = () => {
             variant="ghost"
             size="icon"
             onClick={toggleTheme}
-            className="h-10 w-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
+            className="h-10 w-10 rounded-xl hover:bg-accent text-muted-foreground"
           >
             <motion.span 
               className="text-lg"
@@ -159,7 +174,7 @@ export const AuthLayout = () => {
       </main>
 
       {/* Footer */}
-      <footer className="py-6 text-center text-sm text-slate-500 dark:text-slate-400 z-10">
+      <footer className="py-6 text-center text-sm text-muted-foreground z-10">
          © 2024 ResumeCraft. All rights reserved.
       </footer>
     </div>
@@ -172,20 +187,20 @@ export const LandingLayout = () => {
   const shouldReduceMotion = useReducedMotion()
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-x-hidden font-sans transition-colors duration-300">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden font-sans transition-colors duration-300">
       {/* Header with glassmorphism */}
       <motion.header 
-        className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800"
+        className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: shouldReduceMotion ? 0 : 0.5 }}
       >
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 group">
-             <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-brand-600 text-white transition-transform group-hover:scale-105">
-              <FileText className="h-5 w-5" strokeWidth={2.5} />
+             <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-primary/10 transition-transform group-hover:scale-105 p-1.5">
+              <FileText className="h-8 w-8 text-primary" strokeWidth={ICON_STROKE_WIDTH.normal} />
             </div>
-            <span className="text-lg font-bold tracking-tight">
+            <span className="h5 text-foreground">
               ResumeCraft
             </span>
           </Link>
@@ -195,7 +210,7 @@ export const LandingLayout = () => {
               variant="ghost"
               size="icon"
               onClick={toggleTheme}
-              className="h-9 w-9 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
+              className="h-9 w-9 rounded-full hover:bg-accent text-muted-foreground"
             >
               <motion.span 
                 className="text-base"
@@ -209,20 +224,20 @@ export const LandingLayout = () => {
             {/* Mobile: Show condensed buttons */}
             <div className="flex sm:hidden items-center gap-2">
               <Link to="/login">
-                <Button variant="ghost" size="sm" className="rounded-full px-3 text-slate-700 dark:text-slate-300">Sign In</Button>
+                <Button variant="ghost" size="sm" className="rounded-full px-3 text-foreground">Sign In</Button>
               </Link>
               <Link to="/register">
-                <Button size="sm" className="rounded-full px-3 shadow-lg shadow-brand-600/20 bg-brand-600 hover:bg-brand-700 text-white border-none">Start</Button>
+                <Button size="sm" className="rounded-full px-3 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-primary-foreground border-none">Start</Button>
               </Link>
             </div>
             
             {/* Desktop: Full buttons */}
             <div className="hidden sm:flex items-center gap-2">
               <Link to="/login">
-                <Button variant="ghost" className="rounded-full px-5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300">Sign In</Button>
+                <Button variant="ghost" className="rounded-full px-5 hover:bg-accent text-foreground">Sign In</Button>
               </Link>
               <Link to="/register">
-                <Button className="rounded-full px-5 shadow-lg shadow-brand-600/20 bg-brand-600 hover:bg-brand-700 text-white border-none">Get Started</Button>
+                <Button className="rounded-full px-5 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-primary-foreground border-none">Get Started</Button>
               </Link>
             </div>
           </div>
@@ -235,13 +250,15 @@ export const LandingLayout = () => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 py-12">
+      <footer className="border-t border-border bg-card py-12">
         <div className="container mx-auto px-4 text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <FileText className="h-6 w-6 text-brand-600" />
-            <span className="text-xl font-bold">ResumeCraft</span>
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 p-2">
+              <FileText className="h-6 w-6 text-primary" strokeWidth={ICON_STROKE_WIDTH.normal} />
+            </div>
+            <span className="h4 text-foreground">ResumeCraft</span>
           </div>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
+          <p className="text-muted-foreground text-sm">
             © 2024 ResumeCraft. Building careers with AI.
           </p>
         </div>

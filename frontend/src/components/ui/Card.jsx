@@ -125,9 +125,9 @@ export const StatsCard = React.memo(({
   const shouldReduceMotion = useReducedMotion()
   
   const trendColors = {
-    positive: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10',
-    negative: 'text-red-600 dark:text-red-400 bg-red-500/10',
-    neutral: 'text-slate-600 dark:text-slate-400 bg-slate-500/10',
+    positive: 'text-green-600 dark:text-green-400 bg-green-500/10',
+    negative: 'text-destructive dark:text-destructive/80 bg-destructive/10',
+    neutral: 'text-muted-foreground bg-muted/50',
   }
 
   const trendIcons = {

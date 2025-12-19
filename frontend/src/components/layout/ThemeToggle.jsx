@@ -4,6 +4,7 @@ import { Sun, Moon } from 'lucide-react'
 import { Button } from '../ui'
 import { useTheme } from '../../contexts/ThemeContext'
 import { useReducedMotion } from 'framer-motion'
+import { ICON_SIZES, ICON_STROKE_WIDTH } from '../../constants/icons'
 
 export const ThemeToggle = () => {
   const { toggleTheme, getThemeLabel, isDark } = useTheme()
@@ -28,7 +29,7 @@ export const ThemeToggle = () => {
         onClick={toggleTheme}
         title={`Switch to ${getThemeLabel()} theme`}
         aria-label={`Switch to ${getThemeLabel()} theme`}
-        className="h-10 w-10 rounded-xl bg-background/50 backdrop-blur-sm hover:bg-primary/10 border border-border/50 dark:border-slate-700 dark:hover:bg-slate-800"
+        className="h-10 w-10 rounded-xl bg-background/50 backdrop-blur-sm hover:bg-primary/10 border border-border/50"
       >
         <motion.div
           initial={false}
@@ -43,9 +44,9 @@ export const ThemeToggle = () => {
           className="relative w-5 h-5"
         >
           {isDark ? (
-            <Moon className="w-5 h-5 text-slate-700 dark:text-slate-300" fill="currentColor" />
+            <Moon className={ICON_SIZES.md} strokeWidth={ICON_STROKE_WIDTH.normal} fill="currentColor" />
           ) : (
-            <Sun className="w-5 h-5 text-amber-500" fill="currentColor" />
+            <Sun className={ICON_SIZES.md} strokeWidth={ICON_STROKE_WIDTH.normal} fill="currentColor" />
           )}
         </motion.div>
       </Button>

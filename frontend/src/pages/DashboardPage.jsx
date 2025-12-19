@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
@@ -36,11 +36,11 @@ export const DashboardPage = () => {
     loadDashboardData
   } = useDashboardData()
 
-  const handleChartClick = () => {
+  const handleChartClick = useCallback(() => {
     navigate('/resumes')
-  }
+  }, [navigate])
 
-  const handleExport = () => {
+  const handleExport = useCallback(() => {
     const dataStr = JSON.stringify({ stats, trends, insights }, null, 2)
     const dataBlob = new Blob([dataStr], { type: 'application/json' })
     const url = URL.createObjectURL(dataBlob)
@@ -49,7 +49,7 @@ export const DashboardPage = () => {
     link.download = `dashboard-data-${new Date().toISOString().split('T')[0]}.json`
     link.click()
     URL.revokeObjectURL(url)
-  }
+  }, [stats, trends, insights])
 
   if (loading) {
     return <DashboardSkeleton />

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect } from 'react'
+import React, { createContext, useContext, useEffect, useMemo } from 'react'
 import { useAuthReducer } from '../hooks/useAuthReducer'
 import { useAuthActions } from '../hooks/useAuthActions'
 import { useSessionManagement } from '../hooks/useSessionManagement'
@@ -23,8 +23,8 @@ export const AuthProvider = ({ children }) => {
   // Manage session expiry
   useSessionManagement(state, dispatch, logout)
 
-  // Context value
-  const value = {
+  // Memoize context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
     // State
     user: state.user,
     isAuthenticated: state.isAuthenticated,
@@ -35,7 +35,15 @@ export const AuthProvider = ({ children }) => {
     
     // Actions
     ...actions,
-  }
+  }), [
+    state.user,
+    state.isAuthenticated,
+    state.loading,
+    state.error,
+    state.rememberMe,
+    state.sessionExpiresAt,
+    actions,
+  ])
 
   return (
     <AuthContext.Provider value={value}>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
@@ -9,20 +9,55 @@ import { useNotificationsContext } from '../../contexts/NotificationsContext'
 import { useReducedMotion } from 'framer-motion'
 import { ThemeToggle } from './ThemeToggle'
 
-export const UserMenu = ({ onLogoutClick, onNotificationsClick }) => {
+/**
+ * UserMenu component - Memoized to prevent unnecessary re-renders
+ */
+export const UserMenu = React.memo(({ onLogoutClick, onNotificationsClick }) => {
   const { user } = useAuth()
   const { unreadCount = 0, totalCount = 0 } = useNotificationsContext()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const shouldReduceMotion = useReducedMotion()
 
-  const getInteractiveMotion = (hoverScale = 1.05, tapScale = 0.95) => {
+  const getInteractiveMotion = useCallback((hoverScale = 1.05, tapScale = 0.95) => {
     if (shouldReduceMotion) return {}
     const props = { whileHover: { scale: hoverScale } }
     if (typeof tapScale === 'number') {
       props.whileTap = { scale: tapScale }
     }
     return props
-  }
+  }, [shouldReduceMotion])
+
+  // Memoize notification tooltip content
+  const notificationTooltip = useMemo(() => {
+    if (unreadCount > 0) {
+      return `${unreadCount} unread${unreadCount > 1 ? 's' : ''}${totalCount > unreadCount ? ` • ${totalCount} total` : ''}`
+    }
+    if (totalCount > 0) {
+      return `${totalCount} notification${totalCount > 1 ? 's' : ''}`
+    }
+    return 'No notifications'
+  }, [unreadCount, totalCount])
+
+  // Memoize user display name
+  const userDisplayName = useMemo(() => {
+    if (user?.firstName && user?.lastName) {
+      return `${user.firstName} ${user.lastName}`
+    }
+    return user?.name || 'User'
+  }, [user?.firstName, user?.lastName, user?.name])
+
+  // Memoize user initials
+  const userInitials = useMemo(() => {
+    const first = (user?.firstName?.[0] || user?.name?.[0] || 'U').toUpperCase()
+    const last = user?.lastName?.[0]?.toUpperCase() || ''
+    return `${first}${last}`
+  }, [user?.firstName, user?.lastName, user?.name])
+
+  const handleCloseMenu = useCallback(() => setUserMenuOpen(false), [])
+  const handleLogout = useCallback(() => {
+    setUserMenuOpen(false)
+    onLogoutClick()
+  }, [onLogoutClick])
 
   return (
     <div className="flex items-center gap-2 sm:gap-3">
@@ -33,13 +68,7 @@ export const UserMenu = ({ onLogoutClick, onNotificationsClick }) => {
         {...getInteractiveMotion(1.05, 0.95)}
       >
         <Tooltip
-          content={
-            unreadCount > 0
-              ? `${unreadCount} unread${unreadCount > 1 ? 's' : ''}${totalCount > unreadCount ? ` • ${totalCount} total` : ''}`
-              : totalCount > 0
-              ? `${totalCount} notification${totalCount > 1 ? 's' : ''}`
-              : 'No notifications'
-          }
+          content={notificationTooltip}
           position="bottom"
         >
           <Button
@@ -75,17 +104,12 @@ export const UserMenu = ({ onLogoutClick, onNotificationsClick }) => {
                   className="h-8 w-8 rounded-lg object-cover"
                 />
               ) : (
-                <>
-                  {(user?.firstName?.[0] || user?.name?.[0] || 'U').toUpperCase()}
-                  {user?.lastName?.[0]?.toUpperCase() || ''}
-                </>
+                userInitials
               )}
             </div>
             <div className="hidden sm:block min-w-0">
               <p className="text-sm font-medium leading-none truncate max-w-24 md:max-w-none text-foreground">
-                {user?.firstName && user?.lastName 
-                  ? `${user.firstName} ${user.lastName}` 
-                  : user?.name || 'User'}
+                {userDisplayName}
               </p>
             </div>
             <ChevronDown className="h-4 w-4 text-muted-foreground hidden sm:block flex-shrink-0" />
@@ -102,7 +126,7 @@ export const UserMenu = ({ onLogoutClick, onNotificationsClick }) => {
               asChild
               className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 outline-none cursor-pointer"
             >
-              <Link to="/profile" onClick={() => setUserMenuOpen(false)}>
+              <Link to="/profile" onClick={handleCloseMenu}>
                 <User className="h-4 w-4" />
                 <span>Profile Settings</span>
               </Link>
@@ -112,10 +136,7 @@ export const UserMenu = ({ onLogoutClick, onNotificationsClick }) => {
             
             <DropdownMenu.Item
               className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 outline-none cursor-pointer"
-              onSelect={() => {
-                setUserMenuOpen(false)
-                onLogoutClick()
-              }}
+              onSelect={handleLogout}
             >
               <LogOut className="h-4 w-4" />
               <span>Sign Out</span>
@@ -125,5 +146,7 @@ export const UserMenu = ({ onLogoutClick, onNotificationsClick }) => {
       </DropdownMenu.Root>
     </div>
   )
-}
+})
+
+UserMenu.displayName = 'UserMenu'
 
