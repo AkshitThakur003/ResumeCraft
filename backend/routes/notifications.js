@@ -11,7 +11,10 @@ router.use(authenticateToken);
 // Get user's notifications
 router.get('/', notificationController.getNotifications);
 
-// Get notification by ID
+// Stream notifications via SSE (real-time) - MUST come before /:id route
+router.get('/stream', notificationController.streamNotifications);
+
+// Get notification by ID - MUST come after /stream
 router.get('/:id', notificationController.getNotificationById);
 
 // Mark notification as read
@@ -28,9 +31,6 @@ router.delete('/', generalRateLimit, notificationController.clearAll);
 
 // Create notification (optional - for system use)
 router.post('/', generalRateLimit, notificationController.createNotification);
-
-// Stream notifications via SSE (real-time)
-router.get('/stream', notificationController.streamNotifications);
 
 module.exports = router;
 

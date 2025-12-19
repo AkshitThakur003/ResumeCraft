@@ -128,7 +128,7 @@ export const getQualityAnalytics = () => {
 export const generateCoverLetterStream = (data, callbacks = {}) => {
   const { onProgress = () => {}, onComplete = () => {}, onError = () => {} } = callbacks;
 
-  return createSSEConnectionPOST('/api/cover-letter/generate-stream', data, {
+  return createSSEConnectionPOST('/cover-letter/generate-stream', data, {
     onMessage: (message) => {
       if (message.progress !== undefined) {
         onProgress(message.progress, message.message || 'Processing...');

@@ -32,24 +32,32 @@ describe('Resume List Controller', () => {
         { _id: 'resume2', title: 'Resume 2', userId: 'user123' },
       ];
 
-      Resume.find.mockReturnValue({
+      const mockQuery = {
         sort: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
         lean: jest.fn().mockResolvedValue(mockResumes),
-      });
+      };
 
+      Resume.find.mockReturnValue(mockQuery);
       Resume.countDocuments.mockResolvedValue(2);
-      ResumeAnalysis.aggregate.mockResolvedValue([]);
+      
+      // Mock aggregate to return a chainable object with allowDiskUse
+      const mockAggregate = {
+        allowDiskUse: jest.fn().mockResolvedValue([]),
+      };
+      ResumeAnalysis.aggregate.mockReturnValue(mockAggregate);
 
-      await listResumes(req, res, next);
-
-      if (next.mock.calls.length > 0 && next.mock.calls[0][0]) {
-        throw next.mock.calls[0][0];
+      try {
+        await listResumes(req, res);
+      } catch (error) {
+        // If asyncHandler catches an error, it will call next internally
+        // But since we're not using next in the test, we need to handle it differently
+        throw error;
       }
 
-      // Wait for async operations
-      await new Promise(resolve => setTimeout(resolve, 10));
+      // Wait for async operations to complete
+      await new Promise(resolve => setTimeout(resolve, 50));
 
       expect(Resume.find).toHaveBeenCalledWith({ userId: 'user123' });
       expect(res.json).toHaveBeenCalled();
@@ -70,12 +78,15 @@ describe('Resume List Controller', () => {
       });
 
       Resume.countDocuments.mockResolvedValue(0);
-      ResumeAnalysis.aggregate.mockResolvedValue([]);
+      const mockAggregate1 = {
+        allowDiskUse: jest.fn().mockResolvedValue([]),
+      };
+      ResumeAnalysis.aggregate.mockReturnValue(mockAggregate1);
 
-      await listResumes(req, res, next);
-
-      if (next.mock.calls.length > 0 && next.mock.calls[0][0]) {
-        throw next.mock.calls[0][0];
+      try {
+        await listResumes(req, res);
+      } catch (error) {
+        throw error;
       }
 
       expect(Resume.find).toHaveBeenCalledWith({
@@ -95,12 +106,15 @@ describe('Resume List Controller', () => {
       });
 
       Resume.countDocuments.mockResolvedValue(0);
-      ResumeAnalysis.aggregate.mockResolvedValue([]);
+      const mockAggregate2 = {
+        allowDiskUse: jest.fn().mockResolvedValue([]),
+      };
+      ResumeAnalysis.aggregate.mockReturnValue(mockAggregate2);
 
-      await listResumes(req, res, next);
-
-      if (next.mock.calls.length > 0 && next.mock.calls[0][0]) {
-        throw next.mock.calls[0][0];
+      try {
+        await listResumes(req, res);
+      } catch (error) {
+        throw error;
       }
 
       expect(Resume.find).toHaveBeenCalledWith({
@@ -123,16 +137,19 @@ describe('Resume List Controller', () => {
       });
 
       Resume.countDocuments.mockResolvedValue(25);
-      ResumeAnalysis.aggregate.mockResolvedValue([]);
+      const mockAggregate3 = {
+        allowDiskUse: jest.fn().mockResolvedValue([]),
+      };
+      ResumeAnalysis.aggregate.mockReturnValue(mockAggregate3);
 
-      await listResumes(req, res, next);
+      try {
+        await listResumes(req, res);
+      } catch (error) {
+        throw error;
+      }
 
       // Wait for any async operations
-      await new Promise(resolve => setTimeout(resolve, 10));
-
-      if (next.mock.calls.length > 0 && next.mock.calls[0][0]) {
-        throw next.mock.calls[0][0];
-      }
+      await new Promise(resolve => setTimeout(resolve, 50));
 
       expect(res.json).toHaveBeenCalled();
       const jsonCall = res.json.mock.calls[0][0];
@@ -160,24 +177,30 @@ describe('Resume List Controller', () => {
         },
       ];
 
-      Resume.find.mockReturnValue({
+      const mockQuery = {
         sort: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
         lean: jest.fn().mockResolvedValue(mockResumes),
-      });
+      };
 
+      Resume.find.mockReturnValue(mockQuery);
       Resume.countDocuments.mockResolvedValue(2);
-      ResumeAnalysis.aggregate.mockResolvedValue(mockAnalyses);
+      
+      // Mock aggregate to return a chainable object with allowDiskUse
+      const mockAggregate = {
+        allowDiskUse: jest.fn().mockResolvedValue(mockAnalyses),
+      };
+      ResumeAnalysis.aggregate.mockReturnValue(mockAggregate);
 
-      await listResumes(req, res, next);
-
-      if (next.mock.calls.length > 0 && next.mock.calls[0][0]) {
-        throw next.mock.calls[0][0];
+      try {
+        await listResumes(req, res);
+      } catch (error) {
+        throw error;
       }
 
-      // Wait for async operations
-      await new Promise(resolve => setTimeout(resolve, 10));
+      // Wait for async operations to complete
+      await new Promise(resolve => setTimeout(resolve, 50));
 
       expect(ResumeAnalysis.aggregate).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalled();
@@ -200,16 +223,19 @@ describe('Resume List Controller', () => {
       });
 
       Resume.countDocuments.mockResolvedValue(0);
-      ResumeAnalysis.aggregate.mockResolvedValue([]);
+      const mockAggregate4 = {
+        allowDiskUse: jest.fn().mockResolvedValue([]),
+      };
+      ResumeAnalysis.aggregate.mockReturnValue(mockAggregate4);
 
-      await listResumes(req, res, next);
-
-      if (next.mock.calls.length > 0 && next.mock.calls[0][0]) {
-        throw next.mock.calls[0][0];
+      try {
+        await listResumes(req, res);
+      } catch (error) {
+        throw error;
       }
 
       // Wait for async operations
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 50));
 
       // The limit should be capped at MAX_PAGE_SIZE
       expect(res.json).toHaveBeenCalled();

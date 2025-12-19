@@ -199,7 +199,7 @@ export const pollAnalysisStatus = (
 export const analyzeResumeStream = (id, options = {}, callbacks = {}) => {
   const { onProgress = () => {}, onAnalysisId = () => {}, onComplete = () => {}, onError = () => {} } = callbacks;
   
-  return createSSEConnectionPOST(`/api/resume/${id}/analyze-stream`, {
+  return createSSEConnectionPOST(`/resume/${id}/analyze-stream`, {
     analysisType: options.analysisType || 'general',
     jobDescription: options.jobDescription || null,
   }, {
