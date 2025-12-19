@@ -253,7 +253,13 @@ const corsOptions = {
   optionsSuccessStatus: 200,
   // Additional security headers
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With', 
+    'Cache-Control',
+    'Accept'
+  ],
   exposedHeaders: ['X-RateLimit-Remaining', 'X-RateLimit-Reset'],
   maxAge: 86400, // 24 hours
 };
@@ -463,10 +469,14 @@ app.use('/api/cover-letter/analytics', require('./routes/coverLetterAnalytics'))
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/admin', adminRoutes);
 
-// OAuth routes - mount ONLY at /auth for OAuth provider callbacks
-// DO NOT mount at /api/auth as it conflicts with auth routes (login, register, etc.)
-// OAuth callbacks go to /auth/:provider/callback (e.g., /auth/google/callback)
+// OAuth routes - mount at both /auth and /api/auth for flexibility
+// The callback route (/:provider/callback) won't conflict with auth routes (login, register, etc.)
+// because they use different route patterns:
+// - Auth routes: /login, /register, /refresh (specific paths)
+// - OAuth routes: /:provider, /:provider/callback (parameterized paths)
+// This allows Google OAuth to redirect to either /auth/google/callback or /api/auth/google/callback
 app.use('/auth', oauthRoutes);
+app.use('/api/auth', oauthRoutes);
 
 // Favicon route (prevents 404 errors)
 app.get('/favicon.ico', (req, res) => {

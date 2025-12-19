@@ -31,9 +31,8 @@ const setupSSEHeaders = (res) => {
   res.setHeader('Connection', 'keep-alive');
   res.setHeader('X-Accel-Buffering', 'no'); // Disable nginx buffering
   
-  // CORS headers for SSE
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Cache-Control');
+  // CORS is handled by the main CORS middleware in server.js
+  // Do not set CORS headers here to avoid conflicts with credentials and origin restrictions
   
   // Send initial connection message
   res.write(': connected\n\n');
