@@ -5,6 +5,7 @@ import { formatRelativeTime, isValidObjectId } from '../utils'
 import { useNotificationsReducer } from './useNotificationsReducer'
 import { logger } from '../utils/logger'
 import { createSSEConnection } from '../utils/sse'
+import { getStoredAccessToken } from '../utils/tokenStorage'
 
 // Check localStorage to see if we've already determined the endpoint doesn't exist
 const checkEndpointExists = () => {
@@ -300,8 +301,8 @@ export const useNotifications = () => {
         const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
         const sseUrl = `${baseURL}/api/notifications/stream`
         
-        // Get auth token
-        const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
+        // Get auth token using centralized token storage utility
+        const { token } = getStoredAccessToken()
         
         logger.debug('Attempting SSE connection for notifications')
         

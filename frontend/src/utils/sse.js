@@ -5,6 +5,8 @@
  */
 
 import api from './api';
+import { getStoredAccessToken } from './tokenStorage';
+import { logger } from './logger';
 
 /**
  * Create an SSE connection to a stream endpoint
@@ -24,8 +26,9 @@ export const createSSEConnection = (url, options = {}) => {
     onError = () => {},
   } = options;
 
-  // Get auth token from localStorage or headers
-  const token = localStorage.getItem('token') || headers.authorization?.replace('Bearer ', '');
+  // Get auth token using centralized token storage utility
+  const { token } = getStoredAccessToken();
+  const authToken = token || headers.authorization?.replace('Bearer ', '');
   
   // Build full URL with base URL
   const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -44,7 +47,7 @@ export const createSSEConnection = (url, options = {}) => {
         headers: {
           'Accept': 'text/event-stream',
           'Cache-Control': 'no-cache',
-          ...(token && { Authorization: `Bearer ${token}` }),
+          ...(authToken && { Authorization: `Bearer ${authToken}` }),
           ...headers,
         },
         signal: abortController.signal,
@@ -86,7 +89,7 @@ export const createSSEConnection = (url, options = {}) => {
                     const parsedData = JSON.parse(data.trim());
                     handleEvent(event, parsedData);
                   } catch (parseError) {
-                    console.error('Error parsing SSE data:', parseError, data);
+                    logger.error('Error parsing SSE data:', parseError, data);
                   }
                   data = '';
                   event = 'message';
@@ -101,7 +104,7 @@ export const createSSEConnection = (url, options = {}) => {
               const parsedData = JSON.parse(buffer.trim());
               handleEvent('message', parsedData);
             } catch (parseError) {
-              console.error('Error parsing final SSE data:', parseError);
+              logger.error('Error parsing final SSE data:', parseError);
             }
           }
         } catch (streamError) {
@@ -166,8 +169,8 @@ export const createSSEConnectionPOST = (url, body, options = {}) => {
     onError = () => {},
   } = options;
 
-  // Get auth token
-  const token = localStorage.getItem('token');
+  // Get auth token using centralized token storage utility
+  const { token: authToken } = getStoredAccessToken();
   
   // Build full URL
   const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -184,7 +187,7 @@ export const createSSEConnectionPOST = (url, body, options = {}) => {
           'Content-Type': 'application/json',
           'Accept': 'text/event-stream',
           'Cache-Control': 'no-cache',
-          ...(token && { Authorization: `Bearer ${token}` }),
+          ...(authToken && { Authorization: `Bearer ${authToken}` }),
           ...headers,
         },
         body: JSON.stringify(body),
@@ -227,7 +230,7 @@ export const createSSEConnectionPOST = (url, body, options = {}) => {
                     const parsedData = JSON.parse(data.trim());
                     handleEvent(event, parsedData);
                   } catch (parseError) {
-                    console.error('Error parsing SSE data:', parseError, data);
+                    logger.error('Error parsing SSE data:', parseError, data);
                   }
                   data = '';
                   event = 'message';
@@ -244,7 +247,7 @@ export const createSSEConnectionPOST = (url, body, options = {}) => {
               const parsedData = JSON.parse(buffer.trim());
               handleEvent('message', parsedData);
             } catch (parseError) {
-              console.error('Error parsing final SSE data:', parseError);
+              logger.error('Error parsing final SSE data:', parseError);
             }
           }
         } catch (streamError) {

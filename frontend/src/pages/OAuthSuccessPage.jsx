@@ -5,6 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useGlobalToast } from '../contexts/ToastContext';
 import oauthProviders from '../config/oauthProviders';
 import { authAPI } from '../utils/api';
+import { storeAccessToken, clearStoredToken } from '../utils/tokenStorage';
+import { logger } from '../utils/logger';
 
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center">
@@ -50,8 +52,18 @@ export const OAuthSuccessPage = () => {
 
         const { user, accessToken } = response.data.data;
 
-        localStorage.removeItem('authToken');
-        localStorage.setItem('accessToken', accessToken);
+        // Clear any old tokens and store new token using centralized utility
+        clearStoredToken();
+        // Decode token to get expiry (if available)
+        const expiresAt = accessToken ? (() => {
+          try {
+            const payload = JSON.parse(atob(accessToken.split('.')[1]));
+            return payload?.exp ? payload.exp * 1000 : null;
+          } catch {
+            return null;
+          }
+        })() : null;
+        storeAccessToken(accessToken, expiresAt, true); // Remember user by default for OAuth
 
         await checkAuth();
 
@@ -59,7 +71,7 @@ export const OAuthSuccessPage = () => {
         addToast(`Hey ${userName}! Welcome back - you're all set! 🎉`, 'success');
         navigate('/dashboard');
       } catch (error) {
-        console.error('OAuth success handler error:', error);
+        logger.error('OAuth success handler error:', error);
         addToast('We ran into an issue signing you in. Mind trying again?', 'error');
         navigate('/login');
       }

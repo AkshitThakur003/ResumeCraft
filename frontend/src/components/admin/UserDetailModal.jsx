@@ -9,6 +9,7 @@ import { useToast } from '../ui'
 import { adminAPI } from '../../utils/api'
 import { fadeIn, scaleIn } from '../ui/motionVariants'
 import { cn } from '../../utils'
+import { storeAccessToken } from '../../utils/tokenStorage'
 
 export const UserDetailModal = ({ isOpen, onClose, user }) => {
   const { showToast } = useToast()
@@ -107,7 +108,17 @@ export const UserDetailModal = ({ isOpen, onClose, user }) => {
       if (response.data?.success) {
         // Store impersonation info
         const { accessToken, refreshToken, originalAdminId } = response.data.data
-        localStorage.setItem('accessToken', accessToken)
+        // Store access token using centralized utility
+        const expiresAt = accessToken ? (() => {
+          try {
+            const payload = JSON.parse(atob(accessToken.split('.')[1]));
+            return payload?.exp ? payload.exp * 1000 : null;
+          } catch {
+            return null;
+          }
+        })() : null;
+        storeAccessToken(accessToken, expiresAt, true)
+        // Store impersonation-specific data (not handled by tokenStorage)
         localStorage.setItem('refreshToken', refreshToken)
         localStorage.setItem('impersonating', 'true')
         localStorage.setItem('originalAdminId', originalAdminId)

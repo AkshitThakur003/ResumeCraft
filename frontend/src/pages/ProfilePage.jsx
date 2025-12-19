@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { userAPI } from '../utils/api'
 import toast from 'react-hot-toast'
 import { logger } from '../utils/logger'
+import { clearStoredToken } from '../utils/tokenStorage'
 import { 
   Button,
   LoadingWrapper,
@@ -249,8 +250,9 @@ export const ProfilePage = () => {
   const handleDeleteAccount = async () => {
     try {
       await userAPI.deleteAccount()
-      // Clear local storage and redirect to login
-      localStorage.removeItem('accessToken')
+      // Clear tokens using centralized utility
+      clearStoredToken()
+      // Clear other user-related data
       localStorage.removeItem('user')
       localStorage.removeItem('userPreferences')
       sessionStorage.clear()
