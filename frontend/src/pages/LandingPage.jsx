@@ -9,7 +9,7 @@ import { Testimonials } from '../components/sections/Testimonials';
 import { Pricing } from '../components/sections/Pricing';
 import { FAQ } from '../components/sections/FAQ';
 import { useAuth } from '../contexts/AuthContext';
-import { ErrorBoundary } from '../components/ui/ErrorBoundary';
+import { ErrorBoundary } from '../components/ui';
 
 // Lazy load GSAP to reduce initial bundle size
 const loadGSAP = async () => {
