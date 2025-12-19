@@ -175,7 +175,7 @@ export const AuthLayout = () => {
 
       {/* Footer */}
       <footer className="py-6 text-center text-sm text-muted-foreground z-10">
-         © 2024 ResumeCraft. All rights reserved.
+         © 2025 ResumeCraft. All rights reserved.
       </footer>
     </div>
   )
@@ -259,7 +259,7 @@ export const LandingLayout = () => {
             <span className="h4 text-foreground">ResumeCraft</span>
           </div>
           <p className="text-muted-foreground text-sm">
-            © 2024 ResumeCraft. Building careers with AI.
+            © 2025 ResumeCraft. Building careers with AI.
           </p>
         </div>
       </footer>

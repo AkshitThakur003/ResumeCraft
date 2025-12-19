@@ -171,7 +171,7 @@ describe('useAuthReducer', () => {
     const { result } = renderHook(() => useAuthReducer())
     const [, dispatch] = result.current
 
-    const expiryDate = new Date('2024-12-31')
+    const expiryDate = new Date('2025-12-31')
 
     act(() => {
       dispatch({

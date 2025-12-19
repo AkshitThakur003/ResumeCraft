@@ -37,7 +37,7 @@ describe('ProfileAnalytics', () => {
         {
           id: '1',
           fileName: 'resume.pdf',
-          createdAt: '2024-01-01',
+          createdAt: '2025-01-01',
           score: 90,
         },
       ],
@@ -46,7 +46,7 @@ describe('ProfileAnalytics', () => {
           id: '2',
           fileName: 'resume-v2.pdf',
           version: 2,
-          createdAt: '2024-01-15',
+          createdAt: '2025-01-15',
           score: 95,
         },
       ],

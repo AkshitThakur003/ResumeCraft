@@ -61,7 +61,7 @@ describe('tokenStorage', () => {
   describe('storeAccessToken', () => {
     it('stores access token in localStorage when remember is true', () => {
       const token = 'test-token'
-      const expiresAt = new Date('2024-12-31').getTime()
+      const expiresAt = new Date('2025-12-31').getTime()
 
       storeAccessToken(token, expiresAt, true)
 
@@ -81,7 +81,7 @@ describe('tokenStorage', () => {
 
     it('stores token in sessionStorage when remember is false', () => {
       const token = 'test-token'
-      const expiresAt = new Date('2024-12-31').getTime()
+      const expiresAt = new Date('2025-12-31').getTime()
 
       storeAccessToken(token, expiresAt, false)
 
