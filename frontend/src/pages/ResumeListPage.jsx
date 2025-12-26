@@ -53,7 +53,7 @@ export const ResumeListPage = () => {
   }, [debouncedSearchQuery, filters.status, filters.sort]);
 
   // Memoize loadResumes to prevent unnecessary re-renders
-  const loadResumes = useCallback(async () => {
+  const loadResumes = useCallback(async (signal) => {
     try {
       setLoading(true);
       setError(null);
@@ -66,35 +66,70 @@ export const ResumeListPage = () => {
       };
       if (debouncedSearchQuery) params.search = debouncedSearchQuery;
 
-      const response = await listResumes(params);
-      
-      if (response.data.success) {
-        setResumes(response.data.data.resumes || []);
-        if (response.data.data.pagination) {
-          setPagination(prev => {
-            const newPagination = {
-              ...prev,
-              total: response.data.data.pagination.total,
-              pages: response.data.data.pagination.pages,
-            };
-            // If current page exceeds total pages, reset to page 1
-            if (newPagination.page > newPagination.pages && newPagination.pages > 0) {
-              newPagination.page = 1;
-            }
-            return newPagination;
-          });
+      // ✅ Add retry logic for critical resume list load
+      const { apiRequest } = await import('../utils/api')
+      const result = await apiRequest(
+        () => listResumes(params, { signal }),
+        {
+          retries: 2,
+          retryDelay: 1500,
+          retryableStatuses: [0, 500, 502, 503, 504],
+          errorMessage: 'Failed to load resumes. Please try again.',
+          onRetry: (attempt, maxRetries) => {
+            logger.debug(`Resume list load failed (attempt ${attempt}/${maxRetries}), retrying...`)
+          }
         }
+      )
+      
+      // Check if request was aborted
+      if (signal?.aborted) {
+        return;
+      }
+      
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+      
+      const resumeData = result.data || {}
+      setResumes(resumeData.resumes || []);
+      if (resumeData.pagination) {
+        setPagination(prev => {
+          const newPagination = {
+            ...prev,
+            total: resumeData.pagination.total,
+            pages: resumeData.pagination.pages,
+          };
+          // If current page exceeds total pages, reset to page 1
+          if (newPagination.page > newPagination.pages && newPagination.pages > 0) {
+            newPagination.page = 1;
+          }
+          return newPagination;
+        });
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load resumes');
-      showToast('Failed to load resumes', 'error');
+      // Ignore abort errors
+      if (err.name === 'AbortError' || err.code === 'ERR_CANCELED') {
+        return;
+      }
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to load resumes. Please try again.'
+      setError(errorMessage);
+      showToast(errorMessage, 'error');
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   }, [debouncedSearchQuery, filters.status, filters.sort, pagination.page, pagination.limit, showToast]);
 
   useEffect(() => {
-    loadResumes();
+    // ✅ Add request cancellation to prevent memory leaks
+    const abortController = new AbortController();
+    
+    loadResumes(abortController.signal);
+
+    return () => {
+      abortController.abort();
+    };
   }, [loadResumes]);
 
   const handleDelete = async (id) => {
@@ -105,7 +140,7 @@ export const ResumeListPage = () => {
         setPagination(prev => ({ ...prev, page: prev.page - 1 }));
       } else {
         // Reload to get updated list with correct pagination
-        loadResumes();
+        loadResumes(); // No signal needed for manual refresh
       }
       showToast('Resume deleted successfully', 'success');
     } catch (err) {

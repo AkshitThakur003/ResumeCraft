@@ -27,33 +27,82 @@ export const ResumeAnalysisPage = () => {
   const [cancelStream, setCancelStream] = useState(null);
 
   const loadData = useCallback(async () => {
+    // ✅ Create AbortController for request cancellation
+    const abortController = new AbortController();
+    
     try {
       setLoading(true);
       setError(null);
 
-      const resumeRes = await getResume(id);
-      if (resumeRes.data.success) {
-        setResume(resumeRes.data.data.resume);
+      // ✅ Load resume and analysis in parallel for faster loading
+      // This reduces total load time from 2x network latency to 1x
+      const [resumeRes, analysisRes] = await Promise.allSettled([
+        getResume(id, { signal: abortController.signal }),
+        analysisId ? getAnalysis(id, analysisId, { signal: abortController.signal }) : Promise.resolve(null)
+      ]);
+
+      // Check if request was aborted
+      if (abortController.signal.aborted) {
+        return;
+      }
+
+      // Process resume result
+      if (resumeRes.status === 'fulfilled' && resumeRes.value.data.success) {
+        setResume(resumeRes.value.data.data.resume);
         
-        if (analysisId) {
-          const analysisRes = await getAnalysis(id, analysisId);
-          if (analysisRes.data.success) {
-            setAnalysis(analysisRes.data.data.analysis);
-          }
-        } else if (resumeRes.data.data.latestAnalysis) {
-          setAnalysis(resumeRes.data.data.latestAnalysis);
+        // Process analysis result
+        if (analysisRes.status === 'fulfilled' && analysisRes.value?.data?.success) {
+          setAnalysis(analysisRes.value.data.data.analysis);
+        } else if (resumeRes.value.data.data.latestAnalysis) {
+          // Fallback to latest analysis from resume data
+          setAnalysis(resumeRes.value.data.data.latestAnalysis);
         }
+      } else if (resumeRes.status === 'rejected') {
+        // Ignore abort errors
+        if (resumeRes.reason?.name === 'AbortError' || resumeRes.reason?.code === 'ERR_CANCELED') {
+          return;
+        }
+        throw resumeRes.reason;
       }
     } catch (err) {
+      // Ignore abort errors
+      if (err.name === 'AbortError' || err.code === 'ERR_CANCELED') {
+        return;
+      }
       setError(err.response?.data?.message || 'Failed to load resume');
       showToast('Failed to load resume', 'error');
     } finally {
-      setLoading(false);
+      if (!abortController.signal.aborted) {
+        setLoading(false);
+      }
     }
+
+    // Return cleanup function
+    return () => {
+      abortController.abort();
+    };
   }, [id, analysisId, showToast]);
 
   useEffect(() => {
-    loadData();
+    const abortController = new AbortController();
+    let isMounted = true;
+
+    const fetchData = async () => {
+      try {
+        await loadData();
+      } catch (err) {
+        if (isMounted && err.name !== 'AbortError') {
+          // Error already handled in loadData
+        }
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
   }, [loadData]);
 
   // Cleanup SSE stream on unmount

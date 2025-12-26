@@ -70,16 +70,46 @@ export const ProfilePage = () => {
   const fileInputRef = React.useRef(null)
 
   useEffect(() => {
-    loadProfile()
+    // ✅ Add request cancellation to prevent memory leaks
+    const abortController = new AbortController();
+    
+    loadProfile(abortController.signal);
+
+    return () => {
+      abortController.abort();
+    };
   }, [])
 
 
-  const loadProfile = async () => {
+  const loadProfile = async (signal) => {
     try {
       setLoading(true)
-      // Fetch profile from API to get latest data
-      const response = await userAPI.getProfile()
-      const profileData = response.data.data.user
+      
+      // ✅ Add retry logic for critical profile load
+      const { apiRequest } = await import('../utils/api')
+      const result = await apiRequest(
+        () => userAPI.getProfile({ signal }),
+        {
+          retries: 2,
+          retryDelay: 1500,
+          retryableStatuses: [0, 500, 502, 503, 504],
+          errorMessage: 'Failed to load profile. Please try again.',
+          onRetry: (attempt, maxRetries) => {
+            logger.debug(`Profile load failed (attempt ${attempt}/${maxRetries}), retrying...`)
+          }
+        }
+      )
+      
+      // Check if request was aborted
+      if (signal?.aborted) {
+        return
+      }
+      
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+      
+      const profileData = result.data?.user || result.data
       setProfile(profileData)
       const fullName = profileData?.firstName && profileData?.lastName
         ? `${profileData.firstName} ${profileData.lastName}`.trim()
@@ -103,18 +133,27 @@ export const ProfilePage = () => {
         education: profileData?.education || ''
       })
       
-      // Load preferences from API
+      // Load preferences from API (non-critical, no retry needed)
       try {
-        const prefsRes = await userAPI.getPreferences()
-        const prefs = prefsRes.data?.data?.preferences
-        if (prefs) {
-          setPreferences(prefs)
+        const prefsRes = await userAPI.getPreferences({ signal })
+        if (!signal?.aborted) {
+          const prefs = prefsRes.data?.data?.preferences
+          if (prefs) {
+            setPreferences(prefs)
+          }
         }
       } catch (prefError) {
-        logger.error('Failed to load preferences:', prefError)
+        // Ignore abort errors
+        if (prefError.name !== 'AbortError' && prefError.code !== 'ERR_CANCELED') {
+          logger.error('Failed to load preferences:', prefError)
+        }
         // Fallback to default preferences
       }
     } catch (error) {
+      // Ignore abort errors
+      if (error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
+        return
+      }
       logger.error('Failed to load profile:', error)
       // Fallback to user from context
       setProfile(user)
@@ -132,43 +171,58 @@ export const ProfilePage = () => {
         education: user?.education || ''
       })
     } finally {
-      setLoading(false)
+      if (!signal?.aborted) {
+        setLoading(false)
+      }
     }
   }
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault()
+    
+    // ✅ Optimistic update - update UI immediately before API call
+    const previousProfile = { ...profile }
+    const previousFormData = { ...formData }
+    
+    // Split name into firstName and lastName if needed
+    let firstName = formData.firstName
+    let lastName = formData.lastName
+    
+    // If name field is used, split it
+    if (formData.name && !firstName && !lastName) {
+      const nameParts = formData.name.trim().split(/\s+/)
+      firstName = nameParts[0] || ''
+      lastName = nameParts.slice(1).join(' ') || ''
+    } else if (formData.name && (!firstName || !lastName)) {
+      // If name is provided but firstName/lastName are missing, use name
+      const nameParts = formData.name.trim().split(/\s+/)
+      firstName = firstName || nameParts[0] || ''
+      lastName = lastName || nameParts.slice(1).join(' ') || ''
+    }
+    
+    const updateData = {
+      firstName: firstName.trim() || undefined,
+      lastName: lastName.trim() || undefined,
+      phone: formData.phone?.trim() || undefined,
+      location: formData.location?.trim() || undefined,
+      bio: formData.bio?.trim() || undefined,
+      experience: formData.experience?.trim() || undefined,
+      education: formData.education?.trim() || undefined,
+      website: formData.website?.trim() || undefined,
+      linkedin: formData.linkedin?.trim() || undefined,
+      github: formData.github?.trim() || undefined
+    }
+    
+    // Optimistically update profile state
+    const optimisticProfile = {
+      ...profile,
+      ...updateData,
+      name: `${firstName} ${lastName}`.trim() || profile?.name
+    }
+    setProfile(optimisticProfile)
+    
     try {
       setSaving(true)
-      
-      // Split name into firstName and lastName if needed
-      let firstName = formData.firstName
-      let lastName = formData.lastName
-      
-      // If name field is used, split it
-      if (formData.name && !firstName && !lastName) {
-        const nameParts = formData.name.trim().split(/\s+/)
-        firstName = nameParts[0] || ''
-        lastName = nameParts.slice(1).join(' ') || ''
-      } else if (formData.name && (!firstName || !lastName)) {
-        // If name is provided but firstName/lastName are missing, use name
-        const nameParts = formData.name.trim().split(/\s+/)
-        firstName = firstName || nameParts[0] || ''
-        lastName = lastName || nameParts.slice(1).join(' ') || ''
-      }
-      
-      const updateData = {
-        firstName: firstName.trim() || undefined,
-        lastName: lastName.trim() || undefined,
-        phone: formData.phone?.trim() || undefined,
-        location: formData.location?.trim() || undefined,
-        bio: formData.bio?.trim() || undefined,
-        experience: formData.experience?.trim() || undefined,
-        education: formData.education?.trim() || undefined,
-        website: formData.website?.trim() || undefined,
-        linkedin: formData.linkedin?.trim() || undefined,
-        github: formData.github?.trim() || undefined
-      }
       
       // Update profile via API
       const response = await userAPI.updateProfile(updateData)
@@ -200,7 +254,7 @@ export const ProfilePage = () => {
       const profileResponse = await userAPI.getProfile()
       const refreshedProfile = profileResponse.data.data.user
       
-      // Update local state
+      // Update local state with server response
       setProfile(refreshedProfile)
       // Update user context
       await updateUser(refreshedProfile)
@@ -209,8 +263,13 @@ export const ProfilePage = () => {
       setIsEditing(false)
       toast.success('Profile updated successfully!')
     } catch (error) {
+      // ✅ Revert optimistic update on error
+      setProfile(previousProfile)
+      setFormData(previousFormData)
+      
       logger.error('Failed to update profile:', error)
-      toast.error(error.response?.data?.message || 'Failed to update profile')
+      const errorMessage = error.response?.data?.message || 'Failed to update profile. Please try again.'
+      toast.error(errorMessage)
     } finally {
       setSaving(false)
     }

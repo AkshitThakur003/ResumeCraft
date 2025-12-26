@@ -51,19 +51,21 @@ export const uploadResume = (file, metadata = {}, onProgress = null) => {
 /**
  * Get list of user's resumes
  * @param {Object} params - Query parameters (status, sort, limit, page, search)
+ * @param {Object} config - Optional axios config (e.g., signal for cancellation)
  * @returns {Promise} API response
  */
-export const listResumes = (params = {}) => {
-  return api.get('/resume/list', { params });
+export const listResumes = (params = {}, config = {}) => {
+  return api.get('/resume/list', { ...config, params });
 };
 
 /**
  * Get a single resume by ID
  * @param {string} id - Resume ID
+ * @param {Object} config - Optional axios config (e.g., signal for cancellation)
  * @returns {Promise} API response
  */
-export const getResume = (id) => {
-  return api.get(`/resume/${id}`);
+export const getResume = (id, config = {}) => {
+  return api.get(`/resume/${id}`, config);
 };
 
 /**
@@ -104,8 +106,15 @@ export const analyzeResume = (id, options = {}) => {
  * @param {string} analysisId - Analysis ID
  * @returns {Promise} API response
  */
-export const getAnalysis = (resumeId, analysisId) => {
-  return api.get(`/resume/${resumeId}/analysis/${analysisId}`);
+/**
+ * Get a single analysis by ID
+ * @param {string} resumeId - Resume ID
+ * @param {string} analysisId - Analysis ID
+ * @param {Object} config - Optional axios config (e.g., signal for cancellation)
+ * @returns {Promise} API response
+ */
+export const getAnalysis = (resumeId, analysisId, config = {}) => {
+  return api.get(`/resume/${resumeId}/analysis/${analysisId}`, config);
 };
 
 /**

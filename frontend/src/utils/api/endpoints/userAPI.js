@@ -14,9 +14,10 @@ import { dedupeRequest } from '../requestCache'
 export const userAPI = {
   /**
    * Get current user profile information
+   * @param {Object} config - Optional axios config (e.g., signal for cancellation)
    * @returns {Promise<import('axios').AxiosResponse>} Response with user profile data
    */
-  getProfile: () => api.get('/user/profile'),
+  getProfile: (config = {}) => api.get('/user/profile', config),
   
   /**
    * Update user profile information
@@ -99,9 +100,10 @@ export const userAPI = {
   
   /**
    * Get user preferences
+   * @param {Object} config - Optional axios config (e.g., signal for cancellation)
    * @returns {Promise<import('axios').AxiosResponse>} Response with user preferences
    */
-  getPreferences: () => api.get('/user/preferences'),
+  getPreferences: (config = {}) => api.get('/user/preferences', config),
   
   /**
    * Update user preferences
