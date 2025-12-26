@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { userAPI } from '../../utils/api'
+import { apiRequest } from '../../utils/api/errorHandling'
 
 const AUTO_REFRESH_INTERVAL = 5 * 60 * 1000 // 5 minutes
 const MIN_REFRESH_INTERVAL = 2 * 60 * 1000 // Minimum 2 minutes between refreshes
@@ -42,13 +43,27 @@ export const useDashboardData = () => {
       }
       setError(null)
       
-      // Load all dashboard data in parallel
-      const [statsRes] = await Promise.allSettled([
-        userAPI.getDashboard(),
-      ])
+      // ✅ Load dashboard data with retry logic for critical calls
+      // Retry on network errors or 5xx errors (cold start scenarios)
+      const result = await apiRequest(
+        () => userAPI.getDashboard(),
+        {
+          retries: 2,
+          retryDelay: 2000,
+          retryableStatuses: [0, 500, 502, 503, 504],
+          errorMessage: 'Failed to load dashboard data. Please try again.',
+          onRetry: (attempt, maxRetries) => {
+            logger.debug(`Dashboard data fetch failed (attempt ${attempt}/${maxRetries}), retrying...`)
+          }
+        }
+      )
+
+      if (!result.success) {
+        throw new Error(result.error)
+      }
 
       // Process stats
-      const dashboardData = statsRes.status === 'fulfilled' ? statsRes.value.data.data : {}
+      const dashboardData = result.data || {}
       const dashboardStats = dashboardData.stats || {}
       const dashboardTrends = dashboardData.trends || {}
       const dashboardInsights = dashboardData.insights || {}
@@ -176,8 +191,8 @@ export const useDashboardData = () => {
     }
   }, [loadDashboardData])
 
-  // Calculate stat changes
-  const statChanges = useCallback(() => {
+  // ✅ Memoize stat changes calculation - only recalculate when stats or previousStats change
+  const statChanges = useMemo(() => {
     if (!stats || !previousStats) return {}
 
     const formatDelta = (key) => {
@@ -210,7 +225,7 @@ export const useDashboardData = () => {
     error,
     isRefreshing,
     lastRefreshTime,
-    statChanges: statChanges(),
+    statChanges,
     refreshDashboardData,
     loadDashboardData
   }

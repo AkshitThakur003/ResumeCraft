@@ -1,19 +1,24 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '../ui'
 import { TrendingUp, TrendingDown } from 'lucide-react'
 import { ATSAnalysis } from './ATSAnalysis'
 import { JDMatchingAnalysis } from './JDMatchingAnalysis'
 
-export const AnalysisResults = ({ analysis, resume, analysisType = 'general' }) => {
-  const getScoreColor = (score) => {
+/**
+ * AnalysisResults component - Memoized for performance
+ * Only re-renders when analysis data or props change
+ */
+export const AnalysisResults = React.memo(({ analysis, resume, analysisType = 'general' }) => {
+  // ✅ Memoize score color function to prevent recreation on every render
+  const getScoreColor = useMemo(() => (score) => {
     if (score >= 90) return 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950'
     if (score >= 75) return 'text-blue-600 bg-blue-50 dark:bg-blue-950'
     if (score >= 60) return 'text-yellow-600 bg-yellow-50 dark:bg-yellow-950'
     return 'text-red-600 bg-red-50 dark:bg-red-950'
-  }
+  }, [])
 
-  // Render specialized analysis components based on type
-  const renderSpecializedAnalysis = () => {
+  // ✅ Memoize specialized analysis rendering
+  const specializedView = useMemo(() => {
     switch (analysisType) {
       case 'ats':
         return <ATSAnalysis analysis={analysis} />
@@ -22,9 +27,7 @@ export const AnalysisResults = ({ analysis, resume, analysisType = 'general' }) 
       default:
         return null
     }
-  }
-
-  const specializedView = renderSpecializedAnalysis()
+  }, [analysisType, analysis])
 
   return (
     <div className="space-y-6">
@@ -42,7 +45,17 @@ export const AnalysisResults = ({ analysis, resume, analysisType = 'general' }) 
       )}
     </div>
   )
-}
+}, (prevProps, nextProps) => {
+  // Custom comparison: only re-render if analysis data or type changes
+  return (
+    prevProps.analysis?._id === nextProps.analysis?._id &&
+    prevProps.analysis?.overallScore === nextProps.analysis?.overallScore &&
+    prevProps.analysisType === nextProps.analysisType &&
+    prevProps.resume?._id === nextProps.resume?._id
+  )
+})
+
+AnalysisResults.displayName = 'AnalysisResults'
 
 const OverallScoreCard = ({ analysis, getScoreColor }) => (
   <Card>
