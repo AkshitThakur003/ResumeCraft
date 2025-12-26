@@ -60,15 +60,19 @@ export const useAuthActions = (state, dispatch) => {
 
   const checkAuth = async () => {
     try {
-      dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: true })
-      
       const { token, expiresAt, rememberMe } = getStoredAccessToken()
 
+      // ✅ Optimize: If no token exists, we know user is not authenticated
+      // Set loading to false immediately without making API call
       if (!token) {
         dispatch({ type: AUTH_ACTIONS.SET_REMEMBER_ME, payload: rememberMe })
         dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false })
         return
       }
+
+      // We have a token, might be authenticated - set loading true
+      // This only happens when there's a token, so we're likely authenticated
+      dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: true })
 
       if (state.rememberMe !== rememberMe) {
         dispatch({ type: AUTH_ACTIONS.SET_REMEMBER_ME, payload: rememberMe })
@@ -84,6 +88,7 @@ export const useAuthActions = (state, dispatch) => {
       const derivedExpiry = expiresAt || decodeTokenExpiry(token)
       dispatch({ type: AUTH_ACTIONS.SET_SESSION_EXPIRY, payload: derivedExpiry })
       storeAccessToken(token, derivedExpiry, rememberMe)
+      dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false })
     } catch (error) {
       logger.error('Auth check failed:', error)
       clearStoredToken()

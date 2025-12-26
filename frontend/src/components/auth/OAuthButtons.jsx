@@ -5,8 +5,27 @@ import { ProviderIcon } from './ProviderIcon'
 /**
  * OAuth Buttons Component
  * Displays OAuth provider buttons for social login
+ * Shows loading state immediately to prevent UI blocking during cold starts
  */
 export const OAuthButtons = ({ providers, loading, error }) => {
+  // Show loading state immediately, don't hide until we know for sure
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
+          <span className="text-sm text-muted-foreground">Or continue with</span>
+          <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
+        </div>
+        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+          <span>Loading sign-in options...</span>
+        </div>
+      </div>
+    )
+  }
+
+  // Only hide if we're sure there are no providers (not just loading)
   if (!loading && !error && providers.length === 0) {
     return null
   }
@@ -23,12 +42,10 @@ export const OAuthButtons = ({ providers, loading, error }) => {
         </div>
       )}
 
-      {loading && (
-        <div className="flex items-center justify-center text-sm text-muted-foreground">Loading options…</div>
-      )}
-
       {!loading && error && (
-        <div className="text-sm text-red-600 dark:text-red-300 text-center">{error}</div>
+        <div className="text-sm text-amber-600 dark:text-amber-400 text-center">
+          Sign-in options temporarily unavailable. Please try again in a moment.
+        </div>
       )}
 
       {!loading && !error && providers.length > 0 && (

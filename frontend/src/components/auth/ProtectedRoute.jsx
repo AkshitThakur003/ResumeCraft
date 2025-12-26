@@ -24,15 +24,16 @@ export const PublicRoute = ({ children }) => {
   try {
     const { isAuthenticated, loading } = useAuth()
 
-    if (loading) {
-      return <PageLoading message="Loading..." />
-    }
-
-    if (isAuthenticated) {
-      // Redirect to dashboard if already authenticated
+    // ✅ Render immediately - don't wait for auth check
+    // Only redirect if we're CERTAIN user is authenticated (after check completes)
+    // This allows login/register pages to show instantly even during cold starts
+    if (!loading && isAuthenticated) {
+      // User is authenticated, redirect to dashboard
       return <Navigate to="/dashboard" replace />
     }
 
+    // Show login/register form immediately
+    // Auth check happens in background and won't block UI
     return children
   } catch (error) {
     // If AuthProvider is not available, just render children

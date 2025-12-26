@@ -10,28 +10,26 @@ import { Pricing } from '../components/sections/Pricing';
 import { FAQ } from '../components/sections/FAQ';
 import { useAuth } from '../contexts/AuthContext';
 import { ErrorBoundary } from '../components/ui';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-// Register ScrollTrigger plugin globally to ensure it's available for all components
-gsap.registerPlugin(ScrollTrigger);
+// ✅ Lazy load GSAP - components will handle their own GSAP loading
+// This reduces initial bundle size and improves page load time
 
 export const LandingPage = () => {
   const { isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect authenticated users to dashboard
+  // Redirect authenticated users to dashboard (non-blocking)
   useEffect(() => {
+    // Only redirect if we're sure user is authenticated (after check completes)
+    // Don't wait for loading to complete - render page immediately
     if (!loading && isAuthenticated) {
       navigate('/dashboard', { replace: true });
     }
   }, [isAuthenticated, loading, navigate]);
 
-  // Don't render landing page if authenticated (will redirect)
-  if (loading || isAuthenticated) {
-    return null;
-  }
-
+  // ✅ Render immediately - don't wait for auth check
+  // Auth check happens in background via AuthContext
+  // If user is authenticated, redirect will happen after check completes
   return (
     <div className="min-h-screen flex flex-col overflow-x-hidden bg-background">
       <LandingHeader />
