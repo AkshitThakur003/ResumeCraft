@@ -4,6 +4,7 @@ import { listAnalyses } from '../../utils/resumeAPI';
 import { Clock, TrendingUp, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '../ui';
+import { logger } from '../../utils/logger';
 
 export const VersionHistory = ({ resumeId, onSelectAnalysis }) => {
   const [analyses, setAnalyses] = useState([]);
@@ -21,7 +22,7 @@ export const VersionHistory = ({ resumeId, onSelectAnalysis }) => {
         setAnalyses(response.data.data.analyses || []);
       }
     } catch (error) {
-      console.error('Failed to load version history:', error);
+      logger.error('Failed to load version history:', error);
     } finally {
       setLoading(false);
     }

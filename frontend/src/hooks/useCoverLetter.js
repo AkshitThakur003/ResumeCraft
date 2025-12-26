@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { logger } from '../utils/logger'
 import { 
   generateCoverLetterStream,
   getCoverLetter, 
@@ -62,7 +63,7 @@ export const useCoverLetter = () => {
         setTemplates(response.data.data)
       }
     } catch (error) {
-      console.error('Error loading templates:', error)
+      logger.error('Error loading templates:', error)
       // Keep default templates
     }
   }, [])
@@ -78,7 +79,7 @@ export const useCoverLetter = () => {
         }
       }
     } catch (error) {
-      console.error('Error loading resumes:', error)
+      logger.error('Error loading resumes:', error)
     }
   }, [formData.resumeId])
 
