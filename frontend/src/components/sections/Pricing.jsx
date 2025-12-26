@@ -1,14 +1,11 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Check } from 'lucide-react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-// Register ScrollTrigger plugin
-gsap.registerPlugin(ScrollTrigger);
+import { logger } from '../../utils/logger';
 
 export const Pricing = () => {
   const [isAnnual, setIsAnnual] = useState(true);
+  const [gsapReady, setGsapReady] = useState(false);
   const containerRef = useRef(null);
   const priceValueRef = useRef(null);
   const initialRender = useRef(true);
@@ -19,8 +16,37 @@ export const Pricing = () => {
   const discountedMonthlyPrice = Math.round(monthlyPrice * (1 - discountPercentage)); // 12
   const annualTotal = discountedMonthlyPrice * 12;
 
+  // ✅ Lazy load GSAP to reduce initial bundle size
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadGSAP = async () => {
+      try {
+        const gsap = (await import('gsap')).default;
+        const { ScrollTrigger } = await import('gsap/ScrollTrigger');
+        gsap.registerPlugin(ScrollTrigger);
+        if (isMounted) {
+          setGsapReady(true);
+        }
+      } catch (error) {
+        logger.error('Failed to load GSAP:', error);
+        if (isMounted) {
+          setGsapReady(false);
+        }
+      }
+    };
+
+    loadGSAP();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // GSAP Micro-interactions for hover
-  const handleMouseEnter = (e) => {
+  const handleMouseEnter = async (e) => {
+    if (!gsapReady) return;
+    const gsap = (await import('gsap')).default;
     const isPro = e.currentTarget.classList.contains("bg-slate-900");
     
     gsap.to(e.currentTarget, {
@@ -33,7 +59,9 @@ export const Pricing = () => {
     });
   };
 
-  const handleMouseLeave = (e) => {
+  const handleMouseLeave = async (e) => {
+    if (!gsapReady) return;
+    const gsap = (await import('gsap')).default;
     const isPro = e.currentTarget.classList.contains("bg-slate-900");
 
     gsap.to(e.currentTarget, {
@@ -48,7 +76,14 @@ export const Pricing = () => {
 
   // Scroll Reveal
   useEffect(() => {
-    const ctx = gsap.context(() => {
+    if (!gsapReady || !containerRef.current) return;
+
+    let ctx;
+    
+    const initAnimations = async () => {
+      const gsap = (await import('gsap')).default;
+      
+      ctx = gsap.context(() => {
        gsap.fromTo(".pricing-card", 
         { y: 50, opacity: 0 },
         {
@@ -62,9 +97,15 @@ export const Pricing = () => {
           }
         }
        );
-    }, containerRef);
-    return () => ctx.revert();
-  }, []);
+      }, containerRef);
+    };
+
+    initAnimations();
+
+    return () => {
+      if (ctx) ctx.revert();
+    };
+  }, [gsapReady]);
 
   // Price Number Animation
   useLayoutEffect(() => {

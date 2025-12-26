@@ -1,38 +1,74 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ShieldCheck, Zap, Layers, ArrowRight, MousePointer2, Check } from 'lucide-react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-// Register ScrollTrigger plugin
-gsap.registerPlugin(ScrollTrigger);
+import { logger } from '../../utils/logger';
 
 export const Features = () => {
   const sectionRef = useRef(null);
+  const [gsapReady, setGsapReady] = useState(false);
+
+  // ✅ Lazy load GSAP to reduce initial bundle size
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadGSAP = async () => {
+      try {
+        const gsap = (await import('gsap')).default;
+        const { ScrollTrigger } = await import('gsap/ScrollTrigger');
+        gsap.registerPlugin(ScrollTrigger);
+        if (isMounted) {
+          setGsapReady(true);
+        }
+      } catch (error) {
+        logger.error('Failed to load GSAP:', error);
+        if (isMounted) {
+          setGsapReady(false);
+        }
+      }
+    };
+
+    loadGSAP();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Animate each feature block as it comes into view
-      const featureBlocks = gsap.utils.toArray(".feature-block");
-      featureBlocks.forEach((block) => {
-        gsap.fromTo(block, 
-          { opacity: 0, y: 50 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.8,
-            ease: "power3.out",
-            scrollTrigger: {
-              trigger: block,
-              start: "top 80%",
-              toggleActions: "play none none reverse"
-            }
-          }
-        );
-      });
-    }, sectionRef);
+    if (!gsapReady || !sectionRef.current) return;
 
-    return () => ctx.revert();
-  }, []);
+    let ctx;
+    
+    const initAnimations = async () => {
+      const gsap = (await import('gsap')).default;
+      
+      ctx = gsap.context(() => {
+        // Animate each feature block as it comes into view
+        const featureBlocks = gsap.utils.toArray(".feature-block");
+        featureBlocks.forEach((block) => {
+          gsap.fromTo(block, 
+            { opacity: 0, y: 50 },
+            {
+              opacity: 1,
+              y: 0,
+              duration: 0.8,
+              ease: "power3.out",
+              scrollTrigger: {
+                trigger: block,
+                start: "top 80%",
+                toggleActions: "play none none reverse"
+              }
+            }
+          );
+        });
+      }, sectionRef);
+    };
+
+    initAnimations();
+
+    return () => {
+      if (ctx) ctx.revert();
+    };
+  }, [gsapReady]);
 
   return (
     <section ref={sectionRef} className="py-24 bg-slate-50 overflow-hidden">

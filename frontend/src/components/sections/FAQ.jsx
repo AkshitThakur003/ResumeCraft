@@ -1,10 +1,6 @@
 import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-// Register ScrollTrigger plugin
-gsap.registerPlugin(ScrollTrigger);
+import { logger } from '../../utils/logger';
 
 const faqs = [
   {
@@ -25,53 +21,64 @@ const faqs = [
   }
 ];
 
-const FAQItem = ({ faq, isOpen, onClick, id }) => {
+const FAQItem = ({ faq, isOpen, onClick, id, gsapReady }) => {
   const contentRef = useRef(null);
   const contentId = `${id}-content`;
   const headerId = `${id}-header`;
   
   useLayoutEffect(() => {
+    if (!gsapReady) return;
+    
     const el = contentRef.current;
     if (!el) return;
 
-    // Ensure we kill any running animations to allow smooth interruption
-    gsap.killTweensOf(el);
+    let gsapInstance;
+    
+    const initAnimation = async () => {
+      const gsap = (await import('gsap')).default;
+      gsapInstance = gsap;
+      
+      // Ensure we kill any running animations to allow smooth interruption
+      gsap.killTweensOf(el);
 
-    if (isOpen) {
-      // 1. Capture start height (useful if interrupting a close animation)
-      const startHeight = el.offsetHeight;
-      
-      // 2. Measure target height by setting to auto temporarily
-      gsap.set(el, { height: 'auto' });
-      const targetHeight = el.scrollHeight;
-      
-      // 3. Reset to start height immediately
-      gsap.set(el, { height: startHeight });
+      if (isOpen) {
+        // 1. Capture start height (useful if interrupting a close animation)
+        const startHeight = el.offsetHeight;
+        
+        // 2. Measure target height by setting to auto temporarily
+        gsap.set(el, { height: 'auto' });
+        const targetHeight = el.scrollHeight;
+        
+        // 3. Reset to start height immediately
+        gsap.set(el, { height: startHeight });
 
-      // 4. Animate to target
-      gsap.to(el, {
-        height: targetHeight,
-        opacity: 1,
-        duration: 0.4,
-        ease: "power2.out",
-        onComplete: () => {
-          // Set to auto after animation to accommodate window resizing/text wrapping
-          gsap.set(el, { height: "auto" });
-        }
-      });
-    } else {
-      // 1. Explicitly set height to current pixel height (handles 'auto' state)
-      gsap.set(el, { height: el.offsetHeight });
-      
-      // 2. Animate to closed
-      gsap.to(el, {
-        height: 0,
-        opacity: 0,
-        duration: 0.3,
-        ease: "power2.out"
-      });
-    }
-  }, [isOpen]);
+        // 4. Animate to target
+        gsap.to(el, {
+          height: targetHeight,
+          opacity: 1,
+          duration: 0.4,
+          ease: "power2.out",
+          onComplete: () => {
+            // Set to auto after animation to accommodate window resizing/text wrapping
+            gsap.set(el, { height: "auto" });
+          }
+        });
+      } else {
+        // 1. Explicitly set height to current pixel height (handles 'auto' state)
+        gsap.set(el, { height: el.offsetHeight });
+        
+        // 2. Animate to closed
+        gsap.to(el, {
+          height: 0,
+          opacity: 0,
+          duration: 0.3,
+          ease: "power2.out"
+        });
+      }
+    };
+    
+    initAnimation();
+  }, [isOpen, gsapReady]);
 
   return (
     <div 
@@ -119,10 +126,45 @@ const FAQItem = ({ faq, isOpen, onClick, id }) => {
 
 export const FAQ = () => {
   const [openIndex, setOpenIndex] = useState(0);
+  const [gsapReady, setGsapReady] = useState(false);
   const containerRef = useRef(null);
 
+  // ✅ Lazy load GSAP to reduce initial bundle size
   useEffect(() => {
-    const ctx = gsap.context(() => {
+    let isMounted = true;
+
+    const loadGSAP = async () => {
+      try {
+        const gsap = (await import('gsap')).default;
+        const { ScrollTrigger } = await import('gsap/ScrollTrigger');
+        gsap.registerPlugin(ScrollTrigger);
+        if (isMounted) {
+          setGsapReady(true);
+        }
+      } catch (error) {
+        logger.error('Failed to load GSAP:', error);
+        if (isMounted) {
+          setGsapReady(false);
+        }
+      }
+    };
+
+    loadGSAP();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!gsapReady || !containerRef.current) return;
+
+    let ctx;
+    
+    const initAnimations = async () => {
+      const gsap = (await import('gsap')).default;
+      
+      ctx = gsap.context(() => {
        gsap.fromTo(".faq-title", 
         { y: 30, opacity: 0 },
         { 
@@ -136,8 +178,14 @@ export const FAQ = () => {
         }
        );
     }, containerRef);
-    return () => ctx.revert();
-  }, []);
+    };
+
+    initAnimations();
+    
+    return () => {
+      if (ctx) ctx.revert();
+    };
+  }, [gsapReady]);
 
   return (
     <section ref={containerRef} id="faq" className="py-24 bg-white">
@@ -151,7 +199,8 @@ export const FAQ = () => {
               id={`faq-${index}`}
               faq={faq} 
               isOpen={openIndex === index} 
-              onClick={() => setOpenIndex(openIndex === index ? null : index)} 
+              onClick={() => setOpenIndex(openIndex === index ? null : index)}
+              gsapReady={gsapReady}
             />
           ))}
         </div>
