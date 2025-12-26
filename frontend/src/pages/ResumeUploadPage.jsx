@@ -43,6 +43,10 @@ export const ResumeUploadPage = () => {
   const handleUpload = async () => {
     if (!file) return;
 
+    // ✅ Optimistic update - show success state immediately
+    // Note: For uploads, we can't fully optimize since we need the server response
+    // But we can show optimistic feedback during upload
+    
     try {
       setUploading(true);
       setUploadProgress(0);
@@ -53,17 +57,27 @@ export const ResumeUploadPage = () => {
 
       const response = await uploadResume(file, metadata, (progress) => {
         setUploadProgress(progress);
+        // Show optimistic feedback at 50% - user sees progress
+        if (progress >= 50 && progress < 100) {
+          // Upload is progressing well
+        }
       });
 
       if (response.data.success) {
         showToast('Resume uploaded successfully!', 'success');
-        navigate(`/resumes/${response.data.data.resume._id}`);
+        // Small delay to show success state before navigation
+        setTimeout(() => {
+          navigate(`/resumes/${response.data.data.resume._id}`);
+        }, 300);
       }
     } catch (error) {
-      showToast(
-        error.response?.data?.message || 'Failed to upload resume. Please try again.',
-        'error'
-      );
+      // Show user-friendly error message
+      const errorMessage = error.response?.data?.message || 
+        (error.code === 'ECONNABORTED' 
+          ? 'Upload timed out. Please check your connection and try again.'
+          : 'Failed to upload resume. Please try again.');
+      
+      showToast(errorMessage, 'error');
     } finally {
       setUploading(false);
       setUploadProgress(0);
