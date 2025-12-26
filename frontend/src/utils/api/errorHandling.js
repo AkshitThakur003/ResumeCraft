@@ -116,7 +116,7 @@ export const handleApiError = (error) => {
     // Handle service unavailable
     if (status === 503) {
       return {
-        message: data.message || 'Service temporarily unavailable. Please try again later.',
+        message: data.message || 'Service temporarily unavailable. The server may be starting up. Please try again in a moment.',
         status,
         errors: data.errors || [],
         data: data.data,
@@ -124,23 +124,91 @@ export const handleApiError = (error) => {
       }
     }
     
+    // Handle 500 errors with user-friendly message
+    if (status >= 500) {
+      return {
+        message: data.message || 'Server error. Our team has been notified. Please try again in a moment.',
+        status,
+        errors: data.errors || [],
+        data: data.data,
+      }
+    }
+    
+    // Handle 404 errors
+    if (status === 404) {
+      return {
+        message: data.message || 'The requested resource was not found.',
+        status,
+        errors: data.errors || [],
+        data: data.data,
+      }
+    }
+    
+    // Handle 401/403 errors
+    if (status === 401) {
+      return {
+        message: data.message || 'Your session has expired. Please log in again.',
+        status,
+        errors: data.errors || [],
+        data: data.data,
+      }
+    }
+    
+    if (status === 403) {
+      return {
+        message: data.message || 'You don\'t have permission to perform this action.',
+        status,
+        errors: data.errors || [],
+        data: data.data,
+      }
+    }
+    
     return {
-      message: data.message || 'An error occurred',
+      message: data.message || 'An error occurred. Please try again.',
       status,
       errors: data.errors || [], // Backend returns validation errors as array of objects
       data: data.data,
     }
   } else if (error.request) {
-    // Network error
+    // Network error - provide user-friendly message
+    const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout')
+    const isOffline = !navigator.onLine
+    
+    let message = 'Network error. Please check your connection.'
+    if (isTimeout) {
+      message = 'Request timed out. The server may be slow to respond. Please try again.'
+    } else if (isOffline) {
+      message = 'You appear to be offline. Please check your internet connection and try again.'
+    }
+    
     return {
-      message: 'Network error. Please check your connection.',
+      message,
       status: 0,
       errors: [],
+      isNetworkError: true,
+      isTimeout,
+      isOffline,
     }
   } else {
-    // Other error
+    // Other error - provide user-friendly message
+    let message = error.message || 'An unexpected error occurred'
+    
+    // Map common error messages to user-friendly text
+    const errorMessageMap = {
+      'Network Error': 'Connection lost. Please check your internet and try again.',
+      'timeout': 'Request timed out. Please try again.',
+      'Failed to fetch': 'Unable to reach the server. Please check your connection.',
+    }
+    
+    for (const [key, friendlyMessage] of Object.entries(errorMessageMap)) {
+      if (error.message?.includes(key)) {
+        message = friendlyMessage
+        break
+      }
+    }
+    
     return {
-      message: error.message || 'An unexpected error occurred',
+      message,
       status: 0,
       errors: [],
       isNetworkError: true,

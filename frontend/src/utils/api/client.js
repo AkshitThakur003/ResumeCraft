@@ -7,8 +7,8 @@
 import axios from 'axios'
 import { ACCESS_TOKEN_KEY } from './tokenManagement'
 
-/** @constant {number} Default API timeout in milliseconds (30 seconds) */
-const API_TIMEOUT_MS = 30000
+/** @constant {number} Default API timeout in milliseconds (60 seconds for cold start handling) */
+const API_TIMEOUT_MS = 60000
 
 /** @constant {boolean} Whether code is running in browser environment */
 const isBrowser = typeof window !== 'undefined'

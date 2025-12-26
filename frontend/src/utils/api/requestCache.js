@@ -4,8 +4,8 @@
  * @module api/requestCache
  */
 
-/** @constant {number} Cache time-to-live in milliseconds (30 seconds) */
-const CACHE_TTL_MS = 30000
+/** @constant {number} Cache time-to-live in milliseconds (5 minutes) */
+const CACHE_TTL_MS = 5 * 60 * 1000
 
 /**
  * Map of in-flight requests to prevent duplicate concurrent requests
